@@ -27,6 +27,13 @@ npm run build
 npm start              # sert l'API et le front compilé sur le port 3001
 ```
 
+### Déploiement sur Render
+
+Le fichier `render.yaml` décrit le service. Sur https://dashboard.render.com :
+*New → Blueprint*, choisis ce dépôt, puis renseigne `COC_API_TOKEN` (et `ANTHROPIC_API_KEY` si voulu).
+La clé Clash of Clans doit autoriser les adresses IP sortantes du service
+(onglet *Connect → Outbound* du service sur Render).
+
 ## Architecture
 
 ```

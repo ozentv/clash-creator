@@ -1,0 +1,14 @@
+# Déploiement Render : un seul service web qui sert l'API et le front compilé.
+services:
+  - type: web
+    name: clash-creator
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: COC_API_TOKEN
+        sync: false # à saisir dans le tableau de bord Render
+      - key: ANTHROPIC_API_KEY
+        sync: false # facultatif

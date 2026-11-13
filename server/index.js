@@ -34,6 +34,18 @@ app.get('/api/clan/:tag', async (req, res) => {
   }
 });
 
+// Plafond global de générations IA par heure : le site étant public,
+// il borne le coût sur le compte lié à ANTHROPIC_API_KEY.
+const AI_HOURLY_LIMIT = Number(process.env.AI_HOURLY_LIMIT) || 20;
+let aiCalls = [];
+function takeAiSlot() {
+  const hourAgo = Date.now() - 3_600_000;
+  aiCalls = aiCalls.filter((t) => t > hourAgo);
+  if (aiCalls.length >= AI_HOURLY_LIMIT) return false;
+  aiCalls.push(Date.now());
+  return true;
+}
+
 function isValidClan(clan) {
   return (
     clan &&
@@ -59,6 +71,9 @@ app.post('/api/tiktok', async (req, res) => {
   const { clan, style } = req.body ?? {};
   if (!isValidStyle(style) || !isValidClan(clan)) {
     return res.status(400).json({ error: 'Requête invalide.' });
+  }
+  if (!takeAiSlot()) {
+    return res.status(429).json({ error: 'Quota horaire de générations IA atteint. Réessaie plus tard.' });
   }
   try {
     res.json({ text: await generateWithAi(clan, style) });

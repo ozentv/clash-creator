@@ -179,7 +179,7 @@ export default function ClanSearch({ onSearch, onPlayer, loading, currentTag, va
   );
 
   return (
-    <div ref={rootRef} className={`relative w-full text-left ${hero ? 'mx-auto max-w-2xl' : 'max-w-md'}`}>
+    <div ref={rootRef} className={`relative w-full min-w-0 text-left ${hero ? 'mx-auto max-w-2xl' : 'max-w-md'}`}>
       {hero && (
         <div role="group" aria-label="Type de recherche" className="mb-3 flex justify-center gap-2">
           {[

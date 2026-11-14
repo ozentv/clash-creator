@@ -34,6 +34,16 @@ export async function fetchClan(tag, token) {
     throw new CocApiError(502, "Impossible de joindre l'API Clash of Clans.");
   }
   if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    // Un vrai « clan introuvable » vient de l'API avec reason = notFound.
+    // Tout autre 404 signale une adresse d'API (COC_API_BASE_URL) incorrecte.
+    if (res.status === 404 && body?.reason !== 'notFound') {
+      throw new CocApiError(
+        502,
+        "L'adresse de l'API est incorrecte : vérifie COC_API_BASE_URL (elle doit se terminer par /v1).",
+      );
+    }
+    console.error('API Clash of Clans :', res.status, body?.reason ?? '', body?.message ?? '');
     throw new CocApiError(
       res.status,
       ERROR_MESSAGES[res.status] ?? `Erreur de l'API Clash of Clans (${res.status}).`,

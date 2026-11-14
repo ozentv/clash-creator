@@ -65,10 +65,11 @@ export default function App() {
       </header>
 
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6">
-        <section className="rise relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_60px_-30px_rgb(245_197_49/0.35)]">
+        <div className="hero-frame">
+        <section className="relative overflow-hidden rounded-2xl">
           <HeroArt />
           <div className="absolute inset-0 bg-gradient-to-b from-ink-950/25 via-ink-950/40 to-ink-950/85" />
-          <div className={`relative px-4 text-center ${clan ? 'py-8' : 'py-14 sm:py-20'}`}>
+          <div className={`relative px-4 text-center ${clan ? 'py-10' : 'py-16 sm:py-24'}`}>
             <h1 className="font-display text-3xl text-white sm:text-5xl">
               Analyse ton clan <span className="text-shine">en un clic</span>
             </h1>
@@ -84,6 +85,7 @@ export default function App() {
             />
           </div>
         </section>
+        </div>
 
         {status === 'error' && (
           <p role="alert" className="card border-red-400/40 px-4 py-3 text-center text-sm text-red-200">

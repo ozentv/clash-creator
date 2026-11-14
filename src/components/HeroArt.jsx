@@ -49,10 +49,22 @@ export default function HeroArt() {
           style={{ animationDelay: `${s.delay}s` }}
         />
       ))}
+      <line className="shooting-star" x1="1000" y1="20" x2="1060" y2="-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+      <line
+        className="shooting-star"
+        x1="520"
+        y1="10"
+        x2="580"
+        y2="-14"
+        stroke="#fff"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        style={{ animationDelay: '3.5s' }}
+      />
       <rect className="sun" width="1200" height="400" fill="url(#sun)" />
-      <Cloud y={70} scale={1.5} duration={90} delay={-20} opacity={0.16} />
-      <Cloud y={130} scale={1} duration={70} delay={-50} opacity={0.12} />
-      <Cloud y={40} scale={0.8} duration={110} delay={-80} opacity={0.1} />
+      <Cloud y={70} scale={1.5} duration={45} delay={-20} opacity={0.3} />
+      <Cloud y={130} scale={1} duration={34} delay={-50} opacity={0.24} />
+      <Cloud y={40} scale={0.8} duration={60} delay={-80} opacity={0.2} />
       <path d="M0 270 Q200 190 420 250 T820 230 T1200 260 V400 H0Z" fill="#5d6b3a" />
       <path d="M0 310 Q260 240 520 300 T980 280 T1200 310 V400 H0Z" fill="#3f5230" />
       <path d="M0 350 Q300 300 620 345 T1200 335 V400 H0Z" fill="#26361f" />

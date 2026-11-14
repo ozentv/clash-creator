@@ -56,6 +56,8 @@ const tagPath = (tag) => encodeURIComponent('#' + tag);
 
 export const fetchClan = (tag, token) => cocGet(`/clans/${tagPath(tag)}`, token);
 export const fetchCurrentWar = (tag, token) => cocGet(`/clans/${tagPath(tag)}/currentwar`, token);
+export const searchClans = (name, token) =>
+  cocGet(`/clans?name=${encodeURIComponent(name)}&limit=10`, token);
 export const fetchPlayer = (tag, token) => cocGet(`/players/${tagPath(tag)}`, token);
 
 // Les fonctions to*Dto ne gardent que les champs utiles au front.
@@ -83,6 +85,17 @@ export function toClanDto(raw) {
       donations: m.donations ?? 0,
       donationsReceived: m.donationsReceived ?? 0,
     })),
+  };
+}
+
+export function toClanSummaryDto(raw) {
+  return {
+    tag: raw.tag,
+    name: raw.name,
+    level: raw.clanLevel ?? null,
+    memberCount: raw.members ?? null,
+    location: raw.location?.name ?? null,
+    badgeUrl: raw.badgeUrls?.small ?? null,
   };
 }
 

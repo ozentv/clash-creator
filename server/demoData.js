@@ -112,3 +112,14 @@ export function buildDemoPlayer(tag) {
     ],
   };
 }
+
+export function buildDemoSearch(name) {
+  return ['FR', 'Élite', 'Academy'].map((suffix, i) => ({
+    tag: `#2PP${TAG_CHARS[i]}`,
+    name: `${name} ${suffix}`,
+    level: 18 - i * 4,
+    memberCount: 50 - i * 9,
+    location: 'France',
+    badgeUrl: null,
+  }));
+}

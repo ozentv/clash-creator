@@ -1,4 +1,5 @@
-import { MapPin, Shield, Swords, Trophy, Medal } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Link, MapPin, Shield, Swords, Trophy, Medal } from 'lucide-react';
 import { formatNumber } from '../lib/format.js';
 
 export default function ClanHeader({ clan }) {
@@ -8,6 +9,13 @@ export default function ClanHeader({ clan }) {
     [Medal, `${formatNumber(clan.warWins)} guerres gagnées`],
     [Trophy, `${formatNumber(clan.points)} points de clan`],
   ].filter(Boolean);
+
+  const [copied, setCopied] = useState(false);
+  async function copyLink() {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
 
   return (
     <section className="card flex flex-col items-center gap-4 p-5 text-center sm:flex-row sm:text-left">
@@ -33,6 +41,10 @@ export default function ClanHeader({ clan }) {
           ))}
         </ul>
       </div>
+      <button type="button" className="btn btn-quiet shrink-0 sm:ml-auto sm:self-start" onClick={copyLink}>
+        {copied ? <Check className="size-4" aria-hidden="true" /> : <Link className="size-4" aria-hidden="true" />}
+        {copied ? 'Lien copié' : 'Copier le lien'}
+      </button>
     </section>
   );
 }

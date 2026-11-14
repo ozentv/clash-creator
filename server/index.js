@@ -7,12 +7,14 @@ import {
   fetchClan,
   fetchCurrentWar,
   fetchPlayer,
+  searchClans,
   toClanDto,
   toWarDto,
   toPlayerDto,
+  toClanSummaryDto,
   CocApiError,
 } from './cocClient.js';
-import { buildDemoClan, buildDemoWar, buildDemoPlayer } from './demoData.js';
+import { buildDemoClan, buildDemoWar, buildDemoPlayer, buildDemoSearch } from './demoData.js';
 
 const PORT = process.env.PORT ?? 3001;
 const TOKEN = process.env.COC_API_TOKEN?.trim();
@@ -37,6 +39,25 @@ const withTag = (handler) => async (req, res) => {
     res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };
+
+app.get('/api/clans/search', async (req, res) => {
+  const name = String(req.query.name ?? '').trim();
+  if (name.length < 3 || name.length > 50) {
+    return res.status(400).json({ error: 'Le nom doit contenir entre 3 et 50 caractères.' });
+  }
+  try {
+    const clans = DEMO
+      ? buildDemoSearch(name)
+      : ((await searchClans(name, TOKEN)).items ?? []).map(toClanSummaryDto);
+    res.json({ demo: DEMO, clans });
+  } catch (err) {
+    if (err instanceof CocApiError) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
+  }
+});
 
 app.get(
   '/api/clan/:tag',

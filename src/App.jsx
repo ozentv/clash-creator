@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useClan } from './hooks/useClan.js';
+import { useRecentClans } from './hooks/useRecentClans.js';
+import { normalizeTag } from './lib/tag.js';
 import HeroArt from './components/HeroArt.jsx';
 import ClanSearch from './components/ClanSearch.jsx';
 import ClanHeader from './components/ClanHeader.jsx';
@@ -20,6 +22,22 @@ const NAV_LINKS = [
 export default function App() {
   const { status, clan, demo, error, load } = useClan();
   const [playerTag, setPlayerTag] = useState(null);
+  const { recent, remember, forget } = useRecentClans();
+
+  // Lien partageable : ?clan=TAG ouvre directement le clan.
+  useEffect(() => {
+    const tag = normalizeTag(new URLSearchParams(window.location.search).get('clan') ?? '');
+    if (tag) load(tag);
+  }, [load]);
+
+  useEffect(() => {
+    if (!clan) return;
+    remember(clan);
+    const url = new URL(window.location.href);
+    url.searchParams.set('clan', clan.tag.replace('#', ''));
+    window.history.replaceState(null, '', url);
+    document.title = `${clan.name} · Clash Creator`;
+  }, [clan, remember]);
 
   return (
     <>
@@ -46,12 +64,18 @@ export default function App() {
           <div className="absolute inset-0 bg-gradient-to-b from-ink-950/25 via-ink-950/40 to-ink-950/85" />
           <div className={`relative px-4 text-center ${clan ? 'py-8' : 'py-14 sm:py-20'}`}>
             <h1 className="font-display text-3xl text-white sm:text-5xl">
-              Analyse ton clan <span className="text-accent-400">en un tag</span>
+              Analyse ton clan <span className="text-accent-400">en un clic</span>
             </h1>
             <p className="mt-2 mb-6 text-sm text-zinc-300">
               Guerre en cours, classements, fiches joueurs et membres inactifs.
             </p>
-            <ClanSearch onSearch={load} loading={status === 'loading'} />
+            <ClanSearch
+              onSearch={load}
+              loading={status === 'loading'}
+              recent={recent}
+              onForget={forget}
+              currentTag={clan?.tag ?? null}
+            />
           </div>
         </section>
 

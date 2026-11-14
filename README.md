@@ -31,8 +31,10 @@ npm start              # sert l'API et le front compilé sur le port 3001
 
 Le fichier `render.yaml` décrit le service. Sur https://dashboard.render.com :
 *New → Blueprint*, choisis ce dépôt, puis renseigne `COC_API_TOKEN` (et `ANTHROPIC_API_KEY` si voulu).
-La clé Clash of Clans doit autoriser les adresses IP sortantes du service
-(onglet *Connect → Outbound* du service sur Render).
+Render n'a pas d'adresse IP sortante unique (il fournit des plages, que le portail Clash of Clans
+refuse). Il faut donc passer par un proxy à IP fixe, par exemple celui de RoyaleAPI
+(https://docs.royaleapi.com/proxy.html) : autorise l'adresse IP du proxy dans la clé, puis définis
+`COC_API_BASE_URL=https://cocproxy.royaleapi.dev/v1` dans l'onglet *Environment* du service.
 
 ## Architecture
 

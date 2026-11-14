@@ -1,7 +1,12 @@
 // Client minimal pour l'API officielle Clash of Clans.
 // Le token reste côté serveur : il n'est jamais envoyé au navigateur.
 
-const BASE_URL = 'https://api.clashofclans.com/v1';
+// COC_API_BASE_URL permet de passer par un proxy à IP fixe quand l'hébergeur
+// n'a pas d'adresse IP sortante unique (cas de Render).
+const BASE_URL = (process.env.COC_API_BASE_URL?.trim() || 'https://api.clashofclans.com/v1').replace(
+  /\/+$/,
+  '',
+);
 
 export class CocApiError extends Error {
   constructor(status, message) {

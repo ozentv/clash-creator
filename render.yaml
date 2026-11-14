@@ -10,5 +10,7 @@ services:
     envVars:
       - key: COC_API_TOKEN
         sync: false # à saisir dans le tableau de bord Render
+      - key: COC_API_BASE_URL
+        sync: false # proxy à IP fixe, voir README
       - key: ANTHROPIC_API_KEY
         sync: false # facultatif

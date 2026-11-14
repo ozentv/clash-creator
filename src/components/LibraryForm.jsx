@@ -121,7 +121,7 @@ export default function LibraryForm({ kind, onSubmit, onCancel }) {
 
       {composition && (
         <div className="grid gap-4 lg:grid-cols-2">
-          <UnitRows legend="Troupes" rows={troops} onChange={setTroops} choices={TROOP_CHOICES} listId="lib-troops" />
+          <UnitRows legend="Troupes (facultatif si le lien est rempli)" rows={troops} onChange={setTroops} choices={TROOP_CHOICES} listId="lib-troops" />
           <UnitRows legend="Sorts (facultatif)" rows={spells} onChange={setSpells} choices={SPELL_CHOICES} listId="lib-spells" />
           <div>
             <Label htmlFor="lib-engin">Engin de siège (facultatif)</Label>
@@ -137,7 +137,7 @@ export default function LibraryForm({ kind, onSubmit, onCancel }) {
 
       <div>
         <Label htmlFor="lib-lien">
-          Lien de partage du jeu{composition ? ' (facultatif)' : ''}
+          Lien de partage du jeu{composition ? ' (facultatif si les troupes sont remplies)' : ''}
         </Label>
         <input
           id="lib-lien"

@@ -26,7 +26,9 @@ export function validateLibrary(entries, kind) {
     if (!Number.isInteger(e?.hdv) || e.hdv < 1 || e.hdv > 30) problems.push(`${where} : hdv invalide`);
     if (e?.lien && !safeLink(e.lien)) problems.push(`${where} : le lien doit commencer par ${LINK_PREFIX}`);
     if (kind === 'composition') {
-      if (!isUnitList(e?.troupes) || e.troupes.length === 0) problems.push(`${where} : troupes invalides`);
+      // La liste des troupes est facultative quand le lien du jeu est fourni.
+      if (!isUnitList(e?.troupes ?? [])) problems.push(`${where} : troupes invalides`);
+      else if (!e.troupes?.length && !safeLink(e.lien)) problems.push(`${where} : ajoute des troupes ou le lien du jeu`);
       if (e?.sorts !== undefined && !isUnitList(e.sorts)) problems.push(`${where} : sorts invalides`);
     }
     if (kind === 'base' && !BASE_TYPES.includes(e?.type)) problems.push(`${where} : type invalide`);

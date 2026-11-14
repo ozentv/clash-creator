@@ -28,6 +28,7 @@ ajoute un bloc dans le fichier, puis pousse la modification : le site se met à 
 - `hdv` : niveau d'hôtel de ville visé.
 - `troupes`, `sorts`, `engin` : noms **anglais** du jeu (`Miner`, `Rage Spell`, `Wall Wrecker`…).
   Le site les traduit et leur associe une icône.
+- `troupes` peut être omis si `lien` est rempli : la fiche se résume alors à un nom et un bouton.
 - `lien` : dans le jeu, *Armée → Modifier l'armée → Partager → Copier le lien*.
   Seuls les liens `https://link.clashofclans.com/` sont acceptés.
 - `"exemple": true` affiche un bandeau « Exemple à remplacer » ; à retirer sur tes vraies fiches.

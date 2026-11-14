@@ -62,3 +62,9 @@ test('cleanEntry refuse une fiche incomplète ou un lien étranger', () => {
     [],
   );
 });
+
+test('une composition peut se limiter à un nom et au lien du jeu', () => {
+  const lien = 'https://link.clashofclans.com/fr?action=CopyArmy&army=u8x59';
+  assert.deepEqual(cleanEntry('composition', { nom: 'Rapide', hdv: 14, lien }).problems, []);
+  assert.deepEqual(cleanEntry('composition', { nom: 'Rapide', hdv: 14 }).problems, ['ajoute des troupes ou le lien du jeu']);
+});

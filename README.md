@@ -1,7 +1,8 @@
 # Clash Creator AI
 
-Analyse un clan Clash of Clans : classements trophées / dons, cartes de statistiques,
-liste des membres et export PNG du classement.
+Analyse un clan Clash of Clans : guerre en cours, classements (trophées, dons, bilan dons,
+niveau, hôtel de ville) avec export PNG, fiche détaillée de chaque joueur, membres
+probablement inactifs et cartes de statistiques.
 
 ## Démarrage
 
@@ -40,12 +41,12 @@ refuse). Il faut donc passer par un proxy à IP fixe, par exemple celui de Royal
 
 ```
 server/               Proxy Express : garde le token secret et contourne l'absence de CORS
-  index.js            Routes HTTP (GET /api/clan/:tag)
+  index.js            Routes HTTP (/api/clan/:tag, /api/clan/:tag/war, /api/player/:tag)
   cocClient.js        Appel à l'API officielle + mapping des erreurs
-  demoData.js         Clan fictif du mode démo
+  demoData.js         Clan, guerre et joueurs fictifs du mode démo
 src/
   api/clashApi.js     Appels du front vers le proxy
-  hooks/useClan.js    État de chargement du clan
-  lib/                Logique pure (tag, classements, stats, export PNG)
-  components/         Composants React (recherche, en-tête, stats, classement, membres)
+  hooks/              useClan (clan courant), useAsync (guerre, fiche joueur)
+  lib/                Logique pure (tag, classements, stats, inactifs, export PNG)
+  components/         Composants React (recherche, en-tête, stats, guerre, classement, inactifs, fiche joueur, membres)
 ```

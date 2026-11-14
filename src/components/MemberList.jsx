@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatNumber, ROLE_LABELS } from '../lib/format.js';
 
-export default function MemberList({ members }) {
+export default function MemberList({ members, onSelectPlayer }) {
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -37,7 +37,13 @@ export default function MemberList({ members }) {
             {filtered.map((m) => (
               <tr key={m.tag} className="border-t border-night-700">
                 <td className="px-3 py-2">
-                  <span className="font-semibold">{m.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => onSelectPlayer(m.tag)}
+                    className="cursor-pointer text-left font-semibold hover:text-gold-300 hover:underline"
+                  >
+                    {m.name}
+                  </button>
                   <span className="block font-mono text-xs text-slate-500">{m.tag}</span>
                 </td>
                 <td className="px-3 py-2 text-slate-300">{ROLE_LABELS[m.role] ?? m.role}</td>

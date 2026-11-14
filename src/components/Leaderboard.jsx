@@ -1,12 +1,12 @@
 import { useMemo, useRef, useState } from 'react';
 import { RANKINGS, rankMembers } from '../lib/rankings.js';
 import { exportNodeAsPng } from '../lib/exportPng.js';
-import { formatNumber, ROLE_LABELS } from '../lib/format.js';
+import { ROLE_LABELS } from '../lib/format.js';
 
 const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' };
 const SIZES = [10, 20, 50];
 
-export default function Leaderboard({ clan }) {
+export default function Leaderboard({ clan, onSelectPlayer }) {
   const [type, setType] = useState('trophies');
   const [size, setSize] = useState(10);
   const [exporting, setExporting] = useState(false);
@@ -15,8 +15,8 @@ export default function Leaderboard({ clan }) {
 
   const ranking = RANKINGS[type];
   const rows = useMemo(
-    () => rankMembers(clan.members, ranking.key).slice(0, size),
-    [clan.members, ranking.key, size],
+    () => rankMembers(clan.members, type).slice(0, size),
+    [clan.members, type, size],
   );
 
   async function handleExport() {
@@ -40,7 +40,7 @@ export default function Leaderboard({ clan }) {
           <button
             key={r.key}
             type="button"
-            className="btn btn-ghost"
+            className="btn btn-ghost px-3 text-sm sm:text-base"
             aria-pressed={type === r.key}
             onClick={() => setType(r.key)}
           >
@@ -79,6 +79,7 @@ export default function Leaderboard({ clan }) {
           </h3>
           <p className="text-sm text-slate-400">
             {clan.name} · {clan.tag}
+            {ranking.hint && ` · ${ranking.hint}`}
           </p>
         </div>
         <ol className="flex flex-col gap-1.5">
@@ -93,14 +94,20 @@ export default function Leaderboard({ clan }) {
                 {MEDALS[m.rank] ?? m.rank}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold">{m.name}</span>
+                <button
+                  type="button"
+                  onClick={() => onSelectPlayer(m.tag)}
+                  className="block max-w-full cursor-pointer truncate font-semibold hover:text-gold-300 hover:underline"
+                >
+                  {m.name}
+                </button>
                 <span className="block truncate text-xs text-slate-400">
                   {ROLE_LABELS[m.role] ?? m.role}
                   {m.townHallLevel && ` · HDV ${m.townHallLevel}`}
                 </span>
               </span>
               <span className="shrink-0 font-display text-lg text-gold-300 tabular-nums">
-                {formatNumber(m[ranking.key])} {ranking.icon}
+                {ranking.format(m.score)} {ranking.icon}
               </span>
             </li>
           ))}

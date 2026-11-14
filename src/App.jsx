@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { useClan } from './hooks/useClan.js';
 import ClanSearch from './components/ClanSearch.jsx';
 import ClanHeader from './components/ClanHeader.jsx';
 import StatCards from './components/StatCards.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import MemberList from './components/MemberList.jsx';
+import WarPanel from './components/WarPanel.jsx';
+import InactiveMembers from './components/InactiveMembers.jsx';
+import PlayerDialog from './components/PlayerDialog.jsx';
 
 export default function App() {
   const { status, clan, demo, error, load } = useClan();
+  const [playerTag, setPlayerTag] = useState(null);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:py-12">
@@ -42,10 +47,14 @@ export default function App() {
           )}
           <ClanHeader clan={clan} />
           <StatCards members={clan.members} />
-          <Leaderboard clan={clan} />
-          <MemberList members={clan.members} />
+          <WarPanel clanTag={clan.tag} onSelectPlayer={setPlayerTag} />
+          <Leaderboard clan={clan} onSelectPlayer={setPlayerTag} />
+          <InactiveMembers members={clan.members} onSelectPlayer={setPlayerTag} />
+          <MemberList members={clan.members} onSelectPlayer={setPlayerTag} />
         </main>
       )}
+
+      <PlayerDialog tag={playerTag} onClose={() => setPlayerTag(null)} />
 
       <footer className="pt-4 text-center text-xs text-slate-500">
         Ce contenu n'est pas affilié à, approuvé, sponsorisé ou spécifiquement validé par Supercell,

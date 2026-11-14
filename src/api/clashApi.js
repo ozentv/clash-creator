@@ -1,4 +1,4 @@
-// Appels vers notre proxy (server/), qui détient le token Clash of Clans.
+// Appels vers notre serveur (server/), qui détient le token Clash of Clans.
 
 async function get(path) {
   let res;
@@ -22,3 +22,29 @@ export const getRaid = (tag) => get(`/api/clan/${clean(tag)}/raids`).then((b) =>
 export const getPlayer = (tag) => get(`/api/player/${clean(tag)}`).then((b) => b.player);
 export const searchClans = (name) =>
   get(`/api/clans/search?name=${encodeURIComponent(name)}`).then((b) => b.clans);
+
+// ---------- Bibliothèque ----------
+
+export const getLibrary = () => get('/api/library'); // { compositions, bases, editable, warning }
+
+async function admin(method, path, password, body) {
+  let res;
+  try {
+    res = await fetch(path, {
+      method,
+      headers: { Authorization: `Bearer ${password}`, ...(body && { 'Content-Type': 'application/json' }) },
+      body: body && JSON.stringify(body),
+    });
+  } catch {
+    throw new Error('Serveur injoignable.');
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error ?? `Erreur ${res.status}`);
+  }
+}
+
+export const adminLogin = (password) => admin('POST', '/api/admin/login', password);
+export const addLibraryEntry = (kind, entry, password) => admin('POST', `/api/library/${kind}`, password, entry);
+export const deleteLibraryEntry = (id, password) =>
+  admin('DELETE', `/api/library/${encodeURIComponent(id)}`, password);

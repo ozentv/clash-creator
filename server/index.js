@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import compression from 'compression';
+import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
@@ -29,6 +30,9 @@ import {
   buildDemoLeague,
   buildDemoRaids,
 } from './demoData.js';
+
+import { addEntry, dbEnabled, listLibrary, removeEntry } from './libraryStore.js';
+import { cleanEntry, KINDS } from '../src/lib/libraryRules.js';
 
 const PORT = process.env.PORT ?? 3001;
 const TOKEN = process.env.COC_API_TOKEN?.trim();
@@ -86,6 +90,65 @@ const withTag = (handler) => async (req, res) => {
     res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };
+
+// ---------- Bibliothèque (compositions et bases) ----------
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD?.trim() ?? '';
+// L'ajout depuis le site demande une base de données et un mot de passe d'au moins 8 caractères.
+const EDITABLE = dbEnabled && ADMIN_PASSWORD.length >= 8;
+
+const digest = (value) => crypto.createHash('sha256').update(value).digest();
+const failures = new Map(); // tentatives de mot de passe ratées, par adresse IP
+setInterval(() => failures.clear(), 10 * 60_000).unref();
+
+function requireAdmin(req, res, next) {
+  if (!EDITABLE) return res.status(503).json({ error: "L'ajout depuis le site n'est pas configuré." });
+  if ((failures.get(req.ip) ?? 0) >= 10) {
+    return res.status(429).json({ error: 'Trop de tentatives. Réessaie dans dix minutes.' });
+  }
+  const given = (req.get('authorization') ?? '').replace(/^Bearer /, '');
+  if (!crypto.timingSafeEqual(digest(given), digest(ADMIN_PASSWORD))) {
+    failures.set(req.ip, (failures.get(req.ip) ?? 0) + 1);
+    return res.status(401).json({ error: 'Mot de passe incorrect.' });
+  }
+  next();
+}
+
+const dbError = (res, err) => {
+  console.error('Bibliothèque :', err.message);
+  res.status(503).json({ error: 'La base de données est indisponible. Réessaie dans un instant.' });
+};
+
+app.get('/api/library', async (req, res) => {
+  res.json({ ...(await listLibrary()), editable: EDITABLE });
+});
+
+app.post('/api/admin/login', requireAdmin, (req, res) => res.status(204).end());
+
+app.post('/api/library/:kind', requireAdmin, express.json({ limit: '20kb' }), async (req, res) => {
+  const kind = KINDS[req.params.kind];
+  if (!kind) return res.status(404).json({ error: 'Type de fiche inconnu.' });
+  const { entry, problems } = cleanEntry(kind, req.body);
+  if (problems.length > 0) {
+    return res.status(400).json({ error: `Fiche invalide : ${problems.join(', ')}.` });
+  }
+  try {
+    res.status(201).json({ entry: await addEntry(kind, entry) });
+  } catch (err) {
+    dbError(res, err);
+  }
+});
+
+app.delete('/api/library/:id', requireAdmin, async (req, res) => {
+  try {
+    if (await removeEntry(req.params.id)) return res.status(204).end();
+    res.status(404).json({ error: 'Fiche introuvable (les fiches des fichiers ne se suppriment pas ici).' });
+  } catch (err) {
+    dbError(res, err);
+  }
+});
+
+// ---------- Clans et joueurs ----------
 
 app.get('/api/clans/search', async (req, res) => {
   const name = String(req.query.name ?? '').trim();
@@ -185,4 +248,9 @@ if (fs.existsSync(dist)) {
 app.listen(PORT, () => {
   console.log(`API Clash Creator AI sur http://localhost:${PORT}`);
   if (DEMO) console.log('COC_API_TOKEN absent : mode démo (données fictives).');
+  console.log(
+    EDITABLE
+      ? 'Bibliothèque : ajout depuis le site activé.'
+      : 'Bibliothèque : lecture seule (DATABASE_URL et ADMIN_PASSWORD requis pour ajouter depuis le site).',
+  );
 });

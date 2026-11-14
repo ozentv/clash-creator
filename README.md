@@ -11,8 +11,9 @@ Analyse un clan Clash of Clans à partir de son nom ou de son tag.
 
 - **Page joueur** : fiche complète d'un compte, accessible par tag ou en cliquant sur un pseudo —
   profil, armée (héros, équipements, familiers, troupes, sorts, engins), carrière et succès.
-- **Bibliothèque** : pages Compositions et Bases, alimentées par les fichiers de `src/data`
-  (voir `src/data/README.md`), avec les liens de partage du jeu.
+- **Bibliothèque** : pages Compositions et Bases avec les liens de partage du jeu, alimentées par
+  les fichiers de `src/data` et, si une base de données est configurée, par un formulaire
+  protégé par mot de passe (bouton « Gérer »).
 
 L'adresse reflète la page affichée (`?clan=TAG&tab=guerres`, `?joueur=TAG&vue=armee`,
 `?page=compositions`) : tout lien est partageable et le bouton « précédent » fonctionne.
@@ -55,12 +56,23 @@ refuse). Il faut donc passer par un proxy à IP fixe, par exemple celui de Royal
 (https://docs.royaleapi.com/proxy.html) : autorise l'adresse IP du proxy dans la clé, puis définis
 `COC_API_BASE_URL=https://cocproxy.royaleapi.dev/v1` dans l'onglet *Environment* du service.
 
+### Ajout de fiches depuis le site (facultatif)
+
+Sans configuration, la bibliothèque est en lecture seule et ne contient que les fiches de `src/data`.
+Pour activer le bouton « Gérer », définis deux variables d'environnement :
+
+- `DATABASE_URL` : adresse de connexion d'une base PostgreSQL. La table est créée automatiquement.
+- `ADMIN_PASSWORD` : mot de passe du mode gestion, 8 caractères minimum.
+
+Dix mots de passe erronés depuis la même adresse bloquent les tentatives pendant dix minutes.
+
 ## Architecture
 
 ```
 server/               Proxy Express : garde le token secret et contourne l'absence de CORS
   index.js            Routes /api, en-têtes de sécurité, limite de débit, fichiers statiques
   cocClient.js        Appels à l'API officielle (avec cache), erreurs, conversion des réponses
+  libraryStore.js     Bibliothèque : fichiers de src/data + fiches enregistrées en base
   demoData.js         Données fictives du mode démo
 src/
   api/clashApi.js     Appels du front vers le proxy
@@ -84,6 +96,8 @@ tests/                Tests node:test de lib/ et de server/
 | `GET /api/clan/:tag/league` | Ligue de guerre de clans |
 | `GET /api/clan/:tag/raids` | Dernier week-end de raid |
 | `GET /api/player/:tag` | Fiche joueur |
+| `GET /api/library` | Compositions et bases |
+| `POST /api/library/:kind`, `DELETE /api/library/:id` | Ajout et suppression (mot de passe requis) |
 
 Ce contenu n'est pas affilié à, approuvé, sponsorisé ou spécifiquement validé par Supercell,
 et Supercell n'en est pas responsable.

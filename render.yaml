@@ -12,3 +12,7 @@ services:
         sync: false # à saisir dans le tableau de bord Render
       - key: COC_API_BASE_URL
         sync: false # proxy à IP fixe, voir README
+      - key: DATABASE_URL
+        sync: false # facultatif : base PostgreSQL pour ajouter des fiches depuis le site
+      - key: ADMIN_PASSWORD
+        sync: false # facultatif : mot de passe du mode gestion (8 caractères minimum)

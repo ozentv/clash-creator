@@ -114,3 +114,24 @@ const LABEL_NAMES = {
   Newbie: 'Débutant',
 };
 export const labelName = (name) => LABEL_NAMES[name] ?? name;
+
+// Listes proposées dans le formulaire de la bibliothèque (noms de l'API).
+export const TROOP_CHOICES = [
+  'Barbarian', 'Archer', 'Giant', 'Goblin', 'Wall Breaker', 'Balloon', 'Wizard', 'Healer', 'Dragon',
+  'P.E.K.K.A', 'Baby Dragon', 'Miner', 'Electro Dragon', 'Yeti', 'Dragon Rider', 'Electro Titan',
+  'Root Rider', 'Minion', 'Hog Rider', 'Valkyrie', 'Golem', 'Witch', 'Lava Hound', 'Bowler',
+  'Ice Golem', 'Headhunter',
+];
+export const SPELL_CHOICES = [
+  'Lightning Spell', 'Healing Spell', 'Rage Spell', 'Jump Spell', 'Freeze Spell', 'Clone Spell',
+  'Invisibility Spell', 'Recall Spell', 'Poison Spell', 'Earthquake Spell', 'Haste Spell',
+  'Skeleton Spell', 'Bat Spell',
+];
+export const SIEGE_CHOICES = [
+  'Wall Wrecker', 'Battle Blimp', 'Stone Slammer', 'Siege Barracks', 'Log Launcher', 'Flame Flinger',
+  'Battle Drill',
+];
+
+// "sorcier" -> "Wizard" : retrouve le nom de l'API à partir du nom français saisi.
+const API_NAMES = new Map(Object.entries(UNIT_NAMES).map(([api, fr]) => [fr.toLowerCase(), api]));
+export const toApiName = (name) => API_NAMES.get(name.trim().toLowerCase()) ?? name.trim();

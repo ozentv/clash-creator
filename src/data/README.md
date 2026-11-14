@@ -1,6 +1,7 @@
 # Bibliothèque : compositions et bases
 
-Les pages « Compositions » et « Bases » du site lisent ces deux fichiers. Pour ajouter une fiche,
+Les pages « Compositions » et « Bases » du site lisent ces deux fichiers (en plus des fiches
+ajoutées par le bouton « Gérer » quand une base de données est configurée). Pour ajouter une fiche,
 ajoute un bloc dans le fichier, puis pousse la modification : le site se met à jour tout seul.
 `npm test` vérifie que les fichiers sont valides.
 

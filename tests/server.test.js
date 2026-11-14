@@ -68,6 +68,36 @@ test('toPlayerDto ne garde que les héros du village principal', () => {
     ],
   });
   assert.deepEqual(player.heroes.map((h) => h.name), ['Archer Queen']);
+  assert.equal(player.builderBase, null);
+  assert.equal(player.legend, null);
+});
+
+test('toPlayerDto répartit troupes, familiers, engins et super troupes', () => {
+  const troop = (name, extra = {}) => ({ name, level: 5, maxLevel: 10, village: 'home', ...extra });
+  const player = toPlayerDto({
+    tag: '#P',
+    name: 'x',
+    builderHallLevel: 9,
+    troops: [
+      troop('Barbarian'),
+      troop('Super Barbarian', { superTroopIsActive: true }),
+      troop('Sneaky Goblin'),
+      troop('Wall Wrecker'),
+      troop('Unicorn'),
+      troop('Raged Barbarian', { village: 'builderBase' }),
+    ],
+    spells: [{ name: 'Rage Spell', level: 6, maxLevel: 6, village: 'home' }],
+    achievements: [{ name: 'Friend in Need', value: 1234 }, { name: 'Bigger Coffers', value: 9 }],
+  });
+  assert.deepEqual(player.troops.map((u) => u.name), ['Barbarian']);
+  assert.deepEqual(player.siegeMachines.map((u) => u.name), ['Wall Wrecker']);
+  assert.deepEqual(player.pets.map((u) => u.name), ['Unicorn']);
+  assert.deepEqual(player.activeSuperTroops, ['Super Barbarian']);
+  assert.equal(player.progress.troops, 50);
+  assert.equal(player.progress.spells, 100);
+  assert.equal(player.progress.heroes, null);
+  assert.deepEqual(player.career, [{ key: 'Friend in Need', value: 1234 }]);
+  assert.equal(player.builderBase.hallLevel, 9);
 });
 
 test('les données de démo sont cohérentes entre elles', () => {

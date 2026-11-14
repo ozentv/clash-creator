@@ -1,15 +1,18 @@
 import { useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Search, Users } from 'lucide-react';
-import { formatNumber, ROLE_LABELS } from '../lib/format.js';
+import { formatNumber, formatSigned, ROLE_LABELS } from '../lib/format.js';
 
 const ROLE_RANK = { leader: 0, coLeader: 1, admin: 2, member: 3 };
 const COLUMNS = [
   { key: 'name', label: 'Joueur', value: (m) => m.name.toLowerCase(), numeric: false },
   { key: 'role', label: 'Rôle', value: (m) => ROLE_RANK[m.role] ?? 9, numeric: false },
   { key: 'townHallLevel', label: 'HDV', value: (m) => m.townHallLevel ?? 0, numeric: true },
+  { key: 'expLevel', label: 'Niveau', value: (m) => m.expLevel, numeric: true },
+  { key: 'league', label: 'Ligue', value: (m) => (m.league ?? '').toLowerCase(), numeric: false },
   { key: 'trophies', label: 'Trophées', value: (m) => m.trophies, numeric: true },
   { key: 'donations', label: 'Dons', value: (m) => m.donations, numeric: true },
   { key: 'donationsReceived', label: 'Reçus', value: (m) => m.donationsReceived, numeric: true },
+  { key: 'balance', label: 'Bilan', value: (m) => m.donations - m.donationsReceived, numeric: true },
 ];
 
 export default function MemberList({ members, onSelectPlayer }) {
@@ -57,7 +60,7 @@ export default function MemberList({ members, onSelectPlayer }) {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[600px] text-left text-sm">
+        <table className="w-full min-w-[860px] text-left text-sm">
           <thead>
             <tr>
               {COLUMNS.map((c) => {
@@ -95,12 +98,21 @@ export default function MemberList({ members, onSelectPlayer }) {
                 </td>
                 <td className="px-4 py-2.5 text-zinc-400">{ROLE_LABELS[m.role] ?? m.role}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{m.townHallLevel ?? '—'}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums">{m.expLevel}</td>
+                <td className="px-4 py-2.5 text-xs text-zinc-400">{m.league ?? '—'}</td>
                 <td className="px-4 py-2.5 text-right font-medium text-white tabular-nums">
                   {formatNumber(m.trophies)}
                 </td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{formatNumber(m.donations)}</td>
                 <td className="px-4 py-2.5 text-right text-zinc-500 tabular-nums">
                   {formatNumber(m.donationsReceived)}
+                </td>
+                <td
+                  className={`px-4 py-2.5 text-right tabular-nums ${
+                    m.donations - m.donationsReceived < 0 ? 'text-red-300' : 'text-emerald-300'
+                  }`}
+                >
+                  {formatSigned(m.donations - m.donationsReceived)}
                 </td>
               </tr>
             ))}

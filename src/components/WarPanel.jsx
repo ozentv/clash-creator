@@ -20,7 +20,7 @@ function timing(war) {
   return null;
 }
 
-function Side({ side, align }) {
+function Side({ side, align, totalAttacks }) {
   const right = align === 'right';
   return (
     <div className={`min-w-0 flex-1 ${right ? 'text-right' : ''}`}>
@@ -30,6 +30,10 @@ function Side({ side, align }) {
         {side.stars}
       </p>
       <p className="text-xs text-zinc-500 tabular-nums">{side.destruction.toFixed(1)} % détruit</p>
+      <p className="text-xs text-zinc-500 tabular-nums">
+        {side.attacks} / {totalAttacks} attaques
+        {side.attacks > 0 && ` · ${(side.stars / side.attacks).toFixed(1).replace('.', ',')} étoiles par attaque`}
+      </p>
     </div>
   );
 }
@@ -100,9 +104,9 @@ function WarContent({ war, onSelectPlayer }) {
           )}
         </p>
         <div className="flex items-center gap-4">
-          <Side side={war.clan} />
+          <Side side={war.clan} totalAttacks={war.teamSize * war.attacksPerMember} />
           <span className="text-xs font-semibold tracking-widest text-zinc-600">VS</span>
-          <Side side={war.opponent} align="right" />
+          <Side side={war.opponent} align="right" totalAttacks={war.teamSize * war.attacksPerMember} />
         </div>
         {fighting && war.clan.stars + war.opponent.stars > 0 && (
           <div
@@ -156,14 +160,24 @@ function WarContent({ war, onSelectPlayer }) {
               >
                 {m.name}
               </button>
-              {m.townHallLevel && <span className="text-xs text-zinc-500">HDV {m.townHallLevel}</span>}
+              <span className="text-xs text-zinc-500">
+                {[
+                  m.townHallLevel && `HDV ${m.townHallLevel}`,
+                  fighting &&
+                    (m.defenses > 0
+                      ? `attaqué ${m.defenses} fois, ${m.starsConceded ?? 0} étoile${m.starsConceded > 1 ? 's' : ''} concédée${m.starsConceded > 1 ? 's' : ''}`
+                      : 'pas encore attaqué par l\'ennemi'),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
             </span>
             {fighting && (
               <span className="flex w-full flex-wrap gap-1.5 pl-9 sm:w-auto sm:justify-end sm:pl-0">
                 {m.attacks.map((a, i) => (
                   <Attack key={i} attack={a} />
                 ))}
-                {m.attacks.length === 0 && <span className="text-xs text-zinc-600">Pas encore attaqué</span>}
+                {m.attacks.length === 0 && <span className="text-xs text-zinc-600">Aucune attaque faite</span>}
               </span>
             )}
           </li>

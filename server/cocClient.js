@@ -95,6 +95,19 @@ export function toClanDto(raw) {
     warWinStreak: raw.warWinStreak ?? 0,
     warLeague: raw.warLeague?.name ?? null,
     location: raw.location?.name ?? null,
+    type: raw.type ?? null, // open | inviteOnly | closed
+    requiredTrophies: raw.requiredTrophies ?? null,
+    requiredTownHall: raw.requiredTownhallLevel ?? null,
+    warFrequency: raw.warFrequency ?? null,
+    warLogPublic: raw.isWarLogPublic ?? null,
+    warLosses: raw.warLosses ?? null, // absents quand le journal de guerre est privé
+    warTies: raw.warTies ?? null,
+    capitalHallLevel: raw.clanCapital?.capitalHallLevel ?? null,
+    capitalPoints: raw.clanCapitalPoints ?? null,
+    capitalLeague: raw.capitalLeague?.name ?? null,
+    builderBasePoints: raw.clanBuilderBasePoints ?? null,
+    language: raw.chatLanguage?.name ?? null,
+    labels: (raw.labels ?? []).map((l) => l.name),
     members: (raw.memberList ?? []).map((m) => ({
       tag: m.tag,
       name: m.name,
@@ -160,6 +173,8 @@ export function toWarDto(raw) {
           destruction: a.destructionPercentage,
           defenderPosition: opponentPosition.get(a.defenderTag) ?? null,
         })),
+        defenses: m.opponentAttacks ?? 0,
+        starsConceded: m.bestOpponentAttack?.stars ?? null,
       })),
   };
 }
@@ -256,27 +271,4 @@ export async function loadLeague(tag, token) {
   };
 }
 
-export function toPlayerDto(raw) {
-  return {
-    tag: raw.tag,
-    name: raw.name,
-    role: raw.role ?? null,
-    expLevel: raw.expLevel ?? 0,
-    townHallLevel: raw.townHallLevel ?? null,
-    builderHallLevel: raw.builderHallLevel ?? null,
-    league: raw.leagueTier?.name ?? raw.league?.name ?? null,
-    trophies: raw.trophies ?? 0,
-    bestTrophies: raw.bestTrophies ?? 0,
-    builderBaseTrophies: raw.builderBaseTrophies ?? null,
-    warStars: raw.warStars ?? 0,
-    warPreference: raw.warPreference ?? null, // in | out
-    attackWins: raw.attackWins ?? 0,
-    defenseWins: raw.defenseWins ?? 0,
-    donations: raw.donations ?? 0,
-    donationsReceived: raw.donationsReceived ?? 0,
-    capitalContributions: raw.clanCapitalContributions ?? 0,
-    heroes: (raw.heroes ?? [])
-      .filter((h) => h.village === 'home')
-      .map((h) => ({ name: h.name, level: h.level, maxLevel: h.maxLevel })),
-  };
-}
+export { toPlayerDto } from './playerDto.js';

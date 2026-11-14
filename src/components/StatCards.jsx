@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Crown, Gift, Trophy, Users } from 'lucide-react';
-import { computeStats } from '../lib/rankings.js';
+import { ArrowDownToLine, Castle, Crown, Gift, HandHeart, Star, Trophy, Users } from 'lucide-react';
+import { computeStats, rankMembers } from '../lib/rankings.js';
 import { formatNumber } from '../lib/format.js';
 import AnimatedNumber from './AnimatedNumber.jsx';
 
@@ -22,12 +22,25 @@ function StatCard({ icon: Icon, label, children, hint }) {
   );
 }
 
+const oneDecimal = (n) => (n / 10).toFixed(1).replace('.', ',');
+
 export default function StatCards({ members }) {
-  const stats = useMemo(() => computeStats(members), [members]);
+  const stats = useMemo(() => {
+    const base = computeStats(members);
+    const avg = (values) => (values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0);
+    return {
+      ...base,
+      totalReceived: members.reduce((n, m) => n + m.donationsReceived, 0),
+      donors: members.filter((m) => m.donations > 0).length,
+      avgTownHall: avg(members.map((m) => m.townHallLevel).filter(Boolean)),
+      avgLevel: Math.round(avg(members.map((m) => m.expLevel))),
+      topTrophies: rankMembers(members, 'trophies')[0] ?? null,
+    };
+  }, [members]);
 
   return (
     <section aria-label="Statistiques du clan" className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <StatCard icon={Users} label="Membres">
+      <StatCard icon={Users} label="Membres" hint={`${50 - stats.count} places libres`}>
         <AnimatedNumber value={stats.count} /> / 50
       </StatCard>
       <StatCard icon={Trophy} label="Trophées cumulés" hint={`Moyenne ${formatNumber(stats.avgTrophies)}`}>
@@ -35,6 +48,22 @@ export default function StatCards({ members }) {
       </StatCard>
       <StatCard icon={Gift} label="Dons de la saison" hint={`Moyenne ${formatNumber(stats.avgDonations)}`}>
         <AnimatedNumber value={stats.totalDonations} format={formatNumber} />
+      </StatCard>
+      <StatCard icon={ArrowDownToLine} label="Dons reçus" hint="cette saison">
+        <AnimatedNumber value={stats.totalReceived} format={formatNumber} />
+      </StatCard>
+      <StatCard icon={Castle} label="Hôtel de ville moyen" hint="tous membres confondus">
+        <AnimatedNumber value={Math.round(stats.avgTownHall * 10)} format={oneDecimal} />
+      </StatCard>
+      <StatCard icon={Star} label="Niveau moyen">
+        <AnimatedNumber value={stats.avgLevel} />
+      </StatCard>
+      <StatCard
+        icon={HandHeart}
+        label="Membres donateurs"
+        hint={stats.count ? `${Math.round((stats.donors / stats.count) * 100)} % du clan` : null}
+      >
+        <AnimatedNumber value={stats.donors} /> / {stats.count}
       </StatCard>
       <StatCard
         icon={Crown}

@@ -117,7 +117,7 @@ export default function App() {
         />
       )}
 
-      <PlayerDialog tag={playerTag} onClose={() => setPlayerTag(null)} />
+      <PlayerDialog tag={playerTag} onClose={() => setPlayerTag(null)} members={clan?.members} />
 
       <footer className="border-t border-white/[0.08]">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">

@@ -47,6 +47,19 @@ export function buildDemoClan(tag) {
     warWinStreak: 7,
     warLeague: 'Crystal League I',
     location: 'France',
+    type: 'inviteOnly',
+    requiredTrophies: 2400,
+    requiredTownHall: 11,
+    warFrequency: 'always',
+    warLogPublic: true,
+    warLosses: 104,
+    warTies: 6,
+    capitalHallLevel: 10,
+    capitalPoints: 4120,
+    capitalLeague: 'Master League II',
+    builderBasePoints: 38650,
+    language: 'Français',
+    labels: ['Clan Wars', 'Clan War League', 'Friendly'],
     members: buildMembers(),
   };
 }
@@ -68,6 +81,8 @@ export function buildDemoWar(tag) {
           defenderPosition: Math.min(15, Math.max(1, i + 1 + n)),
         };
       }),
+      defenses: i % 3,
+      starsConceded: i % 3 === 0 ? null : 1 + (i % 3),
     }));
   const attacks = members.flatMap((m) => m.attacks);
   return {
@@ -92,24 +107,82 @@ export function buildDemoPlayer(tag) {
   const member = buildMembers().find((m) => m.tag === `#${tag}`);
   if (!member) return null;
   const th = member.townHallLevel;
-  const hero = (name, unlockedAt, max) =>
-    th >= unlockedAt ? [{ name, level: Math.min(max, (th - unlockedAt + 1) * 12), maxLevel: max }] : [];
+  const rand = seeded(tag.charCodeAt(3) + 5);
+  const ratio = Math.min(1, 0.45 + (th - 9) * 0.06);
+  const units = (list) =>
+    list
+      .filter(([, unlockedAt]) => th >= unlockedAt)
+      .map(([name, , maxLevel]) => ({
+        name,
+        maxLevel,
+        level: Math.max(1, Math.min(maxLevel, Math.round(maxLevel * (ratio + (rand() - 0.5) * 0.25)))),
+      }));
+  const heroes = units([['Barbarian King', 7, 100], ['Archer Queen', 8, 100], ['Minion Prince', 9, 90], ['Grand Warden', 11, 75], ['Royal Champion', 13, 50]]);
+  const troops = units([
+    ['Barbarian', 1, 12], ['Archer', 1, 13], ['Giant', 1, 13], ['Goblin', 1, 9], ['Wall Breaker', 1, 13],
+    ['Balloon', 1, 12], ['Wizard', 1, 13], ['Healer', 1, 10], ['Dragon', 1, 12], ['P.E.K.K.A', 1, 12],
+    ['Baby Dragon', 9, 11], ['Miner', 10, 11], ['Electro Dragon', 11, 8], ['Yeti', 12, 7],
+    ['Dragon Rider', 13, 5], ['Electro Titan', 14, 4], ['Root Rider', 15, 3],
+    ['Minion', 1, 13], ['Hog Rider', 1, 14], ['Valkyrie', 1, 11], ['Golem', 1, 14], ['Witch', 9, 7],
+    ['Lava Hound', 9, 6], ['Bowler', 10, 8], ['Ice Golem', 11, 8], ['Headhunter', 12, 3],
+  ]);
+  const spells = units([
+    ['Lightning Spell', 1, 12], ['Healing Spell', 1, 11], ['Rage Spell', 1, 6], ['Jump Spell', 1, 5],
+    ['Freeze Spell', 9, 7], ['Clone Spell', 10, 8], ['Invisibility Spell', 11, 4], ['Recall Spell', 13, 6],
+    ['Poison Spell', 1, 11], ['Earthquake Spell', 1, 5], ['Haste Spell', 9, 5], ['Skeleton Spell', 10, 8], ['Bat Spell', 10, 7],
+  ]);
+  const equipment = units([
+    ['Barbarian Puppet', 7, 18], ['Rage Vial', 7, 18], ['Giant Gauntlet', 9, 27], ['Archer Puppet', 8, 18],
+    ['Invisibility Vial', 8, 18], ['Frozen Arrow', 9, 27], ['Eternal Tome', 11, 18], ['Life Gem', 11, 18],
+    ['Royal Gem', 13, 18], ['Seeking Shield', 13, 18],
+  ]).sort((a, b) => b.level / b.maxLevel - a.level / a.maxLevel);
+  const pct = (list) => {
+    const max = list.reduce((n, u) => n + u.maxLevel, 0);
+    return max ? Math.round((list.reduce((n, u) => n + u.level, 0) / max) * 100) : null;
+  };
+  const legend = member.league === 'Legend League';
   return {
     ...member,
-    builderHallLevel: Math.min(10, th - 6),
+    clan: { tag: '#2PP', name: 'Les Démos FR', badgeUrl: null },
+    townHallWeaponLevel: th >= 12 ? 4 : null,
     bestTrophies: member.trophies + 420,
-    builderBaseTrophies: 2100 + th * 90,
     warStars: 300 + th * 55,
     warPreference: member.donations === 0 ? 'out' : 'in',
     attackWins: 40 + th * 3,
     defenseWins: 6,
     capitalContributions: member.donations * 40,
-    heroes: [
-      ...hero('Barbarian King', 7, 100),
-      ...hero('Archer Queen', 8, 100),
-      ...hero('Grand Warden', 11, 75),
-      ...hero('Royal Champion', 13, 50),
-    ],
+    labels: ['Clan Wars', 'Active Donator', 'Veteran'],
+    legend: legend
+      ? {
+          trophies: 1240,
+          current: { id: null, rank: 48211, trophies: member.trophies },
+          previous: { id: '2026-10', rank: 51200, trophies: 5510 },
+          best: { id: '2026-06', rank: 20417, trophies: 5894 },
+        }
+      : null,
+    builderBase: {
+      hallLevel: Math.min(10, th - 6),
+      trophies: 2100 + th * 90,
+      bestTrophies: 2600 + th * 90,
+      league: 'Brass League I',
+      heroes: [{ name: 'Battle Machine', level: 12 + th, maxLevel: 35 }],
+    },
+    heroes,
+    equipment,
+    pets: units([['L.A.S.S.I', 14, 15], ['Electro Owl', 14, 15], ['Mighty Yak', 14, 15], ['Unicorn', 14, 15], ['Frosty', 15, 15]]),
+    troops,
+    spells,
+    siegeMachines: units([['Wall Wrecker', 12, 5], ['Battle Blimp', 12, 4], ['Stone Slammer', 12, 5], ['Siege Barracks', 13, 5], ['Log Launcher', 13, 5]]),
+    activeSuperTroops: th >= 11 ? ['Super Barbarian', 'Sneaky Goblin'] : [],
+    progress: { heroes: pct(heroes), troops: pct(troops), spells: pct(spells), equipment: pct(equipment) },
+    career: [
+      ['Conqueror', 4200 + th * 310], ['Unbreakable', 900 + th * 40], ['Humiliator', 5100 + th * 280],
+      ['War League Legend', 180 + th * 22], ['Games Champion', 96000 + th * 9000],
+      ['Friend in Need', 210000 + member.donations * 60], ['Sharing is caring', 8200], ['Siege Sharer', 640],
+      ['Aggressive Capitalism', 2400000 + th * 90000], ['Most Valuable Clanmate', 1900000 + th * 60000],
+      ['Gold Grab', 1850000000 + th * 40000000], ['Elixir Escapade', 1920000000 + th * 40000000],
+      ['Heroic Heist', 14200000 + th * 600000], ['Well Seasoned', 61000 + th * 2400],
+    ].map(([key, value]) => ({ key, value })),
   };
 }
 

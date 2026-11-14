@@ -2,6 +2,7 @@ import { GitCompareArrows, Landmark, LayoutDashboard, Swords, Users } from 'luci
 import ClanHeader from './ClanHeader.jsx';
 import StatCards from './StatCards.jsx';
 import Composition from './Composition.jsx';
+import ClanInfo from './ClanInfo.jsx';
 import Leaderboard from './Leaderboard.jsx';
 import InactiveMembers from './InactiveMembers.jsx';
 import MemberList from './MemberList.jsx';
@@ -45,8 +46,6 @@ export default function ClanView({ clan, demo, error, refreshing, tab, onTab, on
         </p>
       )}
       <ClanHeader clan={clan} onRefresh={onRefresh} refreshing={refreshing} />
-      <StatCards members={clan.members} />
-
       <div className="sticky top-14 z-10 -mx-4 border-b border-white/[0.08] bg-ink-950/80 px-4 backdrop-blur-xl">
         <div role="tablist" aria-label="Sections du clan" onKeyDown={onKeyDown} className="flex gap-6 overflow-x-auto">
           {TABS.map(([key, label, Icon]) => (
@@ -77,11 +76,15 @@ export default function ClanView({ clan, demo, error, refreshing, tab, onTab, on
       >
         {tab === 'apercu' && (
           <>
+            <StatCards members={clan.members} />
             <div className="grid items-start gap-4 lg:grid-cols-3">
               <div className="lg:col-span-2">
                 <Leaderboard clan={clan} onSelectPlayer={onSelectPlayer} />
               </div>
-              <Composition members={clan.members} />
+              <div className="flex flex-col gap-4">
+                <ClanInfo clan={clan} />
+                <Composition members={clan.members} />
+              </div>
             </div>
             <InactiveMembers members={clan.members} onSelectPlayer={onSelectPlayer} />
           </>

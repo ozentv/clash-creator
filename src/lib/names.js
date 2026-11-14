@@ -1,0 +1,93 @@
+// Noms français des unités, que l'API renvoie en anglais. Un nom absent reste en anglais.
+const UNIT_NAMES = {
+  // Héros
+  'Barbarian King': 'Roi des barbares',
+  'Archer Queen': 'Reine des archers',
+  'Grand Warden': 'Grand gardien',
+  'Royal Champion': 'Championne royale',
+  'Minion Prince': 'Prince gargouille',
+  'Battle Machine': 'Machine de combat',
+  'Battle Copter': 'Hélicoptère de combat',
+  // Troupes
+  Barbarian: 'Barbare',
+  Archer: 'Archer',
+  Giant: 'Géant',
+  Goblin: 'Gobelin',
+  'Wall Breaker': 'Sapeur',
+  Balloon: 'Ballon',
+  Wizard: 'Sorcier',
+  Healer: 'Guérisseuse',
+  Dragon: 'Dragon',
+  'P.E.K.K.A': 'P.E.K.K.A',
+  'Baby Dragon': 'Bébé dragon',
+  Miner: 'Mineur',
+  'Electro Dragon': 'Électro-dragon',
+  Yeti: 'Yéti',
+  'Dragon Rider': 'Chevaucheur de dragon',
+  'Electro Titan': 'Électro-titan',
+  'Root Rider': 'Chevaucheuse de racines',
+  Minion: 'Gargouille',
+  'Hog Rider': 'Chevaucheur de cochon',
+  Valkyrie: 'Valkyrie',
+  Golem: 'Golem',
+  Witch: 'Sorcière',
+  'Lava Hound': 'Molosse de lave',
+  Bowler: 'Bouliste',
+  'Ice Golem': 'Golem de glace',
+  Headhunter: 'Chasseuse de têtes',
+  // Sorts
+  'Lightning Spell': 'Foudre',
+  'Healing Spell': 'Guérison',
+  'Rage Spell': 'Rage',
+  'Jump Spell': 'Saut',
+  'Freeze Spell': 'Gel',
+  'Clone Spell': 'Clonage',
+  'Invisibility Spell': 'Invisibilité',
+  'Recall Spell': 'Rappel',
+  'Poison Spell': 'Poison',
+  'Earthquake Spell': 'Séisme',
+  'Haste Spell': 'Précipitation',
+  'Skeleton Spell': 'Squelettes',
+  'Bat Spell': 'Chauves-souris',
+  // Engins de siège
+  'Wall Wrecker': 'Broyeur de murs',
+  'Battle Blimp': 'Dirigeable de combat',
+  'Stone Slammer': 'Démolisseur',
+  'Siege Barracks': 'Caserne de siège',
+  'Log Launcher': 'Lance-bûches',
+  'Flame Flinger': 'Catapulte à flammes',
+  'Battle Drill': 'Foreuse de combat',
+  // Familiers
+  'Electro Owl': 'Électro-chouette',
+  'Mighty Yak': 'Yack puissant',
+  Unicorn: 'Licorne',
+  Phoenix: 'Phénix',
+};
+export const unitName = (name) => UNIT_NAMES[name] ?? name;
+
+// Succès du jeu utilisés comme compteurs de carrière.
+export const CAREER_LABELS = {
+  Conqueror: 'Attaques gagnées',
+  Unbreakable: 'Défenses réussies',
+  Humiliator: 'Hôtels de ville détruits',
+  'War League Legend': 'Étoiles en ligue de clans',
+  'Games Champion': 'Points aux jeux de clan',
+  'Friend in Need': 'Troupes données',
+  'Sharing is caring': 'Sorts donnés',
+  'Siege Sharer': 'Engins de siège donnés',
+  'Aggressive Capitalism': 'Or de capitale pillé',
+  'Most Valuable Clanmate': 'Or de capitale donné',
+  'Gold Grab': 'Or pillé',
+  'Elixir Escapade': 'Élixir pillé',
+  'Heroic Heist': 'Élixir noir pillé',
+  'Well Seasoned': 'Points de défis saisonniers',
+};
+
+export const CLAN_TYPE_LABELS = { open: 'Ouvert à tous', inviteOnly: 'Sur invitation', closed: 'Fermé' };
+export const WAR_FREQUENCY_LABELS = {
+  always: 'Toujours en guerre',
+  moreThanOncePerWeek: "Plus d'une fois par semaine",
+  oncePerWeek: 'Une fois par semaine',
+  lessThanOncePerWeek: "Moins d'une fois par semaine",
+  never: 'Jamais',
+};

@@ -34,3 +34,9 @@ export const RESULT_STYLES = {
   lose: 'bg-red-400/10 text-red-300',
   tie: 'bg-zinc-400/10 text-zinc-300',
 };
+
+const cf = new Intl.NumberFormat('fr-FR', { notation: 'compact', maximumFractionDigits: 1 });
+export const formatCompact = (n) => cf.format(n);
+
+// 1 -> "1er", 2 -> "2e"
+export const formatRank = (n) => (n === 1 ? '1er' : `${n}e`);

@@ -32,11 +32,16 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
               </span>
               du {formatDate(raid.startTime)} au {formatDate(raid.endTime)}
             </p>
-            <dl className="grid grid-cols-2 gap-px border-b border-white/10 bg-white/5 lg:grid-cols-4">
+            <dl className="grid grid-cols-2 gap-px border-b border-white/[0.08] bg-white/5 lg:grid-cols-3">
               <Figure label="Or de capitale pillé" value={formatNumber(raid.totalLoot)} />
               <Figure label="Attaques utilisées" value={formatNumber(raid.totalAttacks)} />
               <Figure label="Raids terminés" value={raid.raidsCompleted} />
               <Figure label="Districts détruits" value={raid.districtsDestroyed} />
+              <Figure label="Participants" value={`${raid.members.length} / ${clan.members.length}`} />
+              <Figure
+                label="Or moyen par attaque"
+                value={raid.totalAttacks ? formatNumber(Math.round(raid.totalLoot / raid.totalAttacks)) : '—'}
+              />
             </dl>
 
             {absent.length > 0 && (
@@ -62,12 +67,13 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
             )}
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[380px] text-left text-sm">
+              <table className="w-full min-w-[460px] text-left text-sm">
                 <thead className="text-xs text-zinc-500">
                   <tr>
                     <th className="px-4 py-2.5 font-medium">Joueur</th>
                     <th className="px-4 py-2.5 text-right font-medium">Attaques</th>
                     <th className="px-4 py-2.5 text-right font-medium">Or pillé</th>
+                    <th className="px-4 py-2.5 text-right font-medium">Par attaque</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -87,6 +93,9 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
                       </td>
                       <td className="px-4 py-2 text-right font-semibold text-white tabular-nums">
                         {formatNumber(m.loot)}
+                      </td>
+                      <td className="px-4 py-2 text-right text-zinc-400 tabular-nums">
+                        {m.attacks ? formatNumber(Math.round(m.loot / m.attacks)) : '—'}
                       </td>
                     </tr>
                   ))}

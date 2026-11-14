@@ -38,7 +38,8 @@ export default function WarLog({ clanTag }) {
               Sur les {wars.length} dernières guerres :{' '}
               <span className="font-semibold text-emerald-300">{s.wins} victoires</span>,{' '}
               <span className="font-semibold text-red-300">{s.losses} défaites</span>
-              {s.ties > 0 && `, ${s.ties} égalités`}. Série en cours : {s.streak}{' '}
+              {s.ties > 0 && `, ${s.ties} égalités`}, soit {Math.round((s.wins / wars.length) * 100)} % de
+              victoires. Série en cours : {s.streak}{' '}
               {RESULT_LABELS[wars[0].result].toLowerCase()}
               {s.streak > 1 ? 's' : ''}.
             </p>

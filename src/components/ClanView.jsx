@@ -11,6 +11,8 @@ import LeaguePanel from './LeaguePanel.jsx';
 import WarLog from './WarLog.jsx';
 import RaidPanel from './RaidPanel.jsx';
 import CompareClans from './CompareClans.jsx';
+import Tabs from './Tabs.jsx';
+import DemoBanner from './DemoBanner.jsx';
 
 export const TABS = [
   ['apercu', 'Aperçu', LayoutDashboard],
@@ -21,17 +23,6 @@ export const TABS = [
 ];
 
 export default function ClanView({ clan, demo, error, refreshing, tab, onTab, onRefresh, onSelectPlayer, recent }) {
-  // Flèches gauche/droite pour passer d'un onglet à l'autre.
-  function onKeyDown(e) {
-    const delta = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (!delta) return;
-    e.preventDefault();
-    const index = TABS.findIndex(([key]) => key === tab);
-    const next = TABS[(index + delta + TABS.length) % TABS.length][0];
-    onTab(next);
-    document.getElementById(`tab-${next}`)?.focus();
-  }
-
   return (
     <main className={`mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 transition-opacity ${refreshing ? 'opacity-60' : ''}`}>
       {error && (
@@ -39,33 +30,9 @@ export default function ClanView({ clan, demo, error, refreshing, tab, onTab, on
           {error}
         </p>
       )}
-      {demo && (
-        <p className="rounded-lg border border-accent-400/25 bg-accent-400/[0.06] px-4 py-2 text-center text-xs text-accent-400">
-          Mode démo : données fictives. Ajoute <code className="font-mono">COC_API_TOKEN</code> côté
-          serveur pour charger de vrais clans.
-        </p>
-      )}
+      {demo && <DemoBanner />}
       <ClanHeader clan={clan} onRefresh={onRefresh} refreshing={refreshing} />
-      <div className="sticky top-14 z-10 -mx-4 border-b border-white/[0.08] bg-ink-950/80 px-4 backdrop-blur-xl">
-        <div role="tablist" aria-label="Sections du clan" onKeyDown={onKeyDown} className="flex gap-6 overflow-x-auto">
-          {TABS.map(([key, label, Icon]) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              id={`tab-${key}`}
-              aria-selected={tab === key}
-              aria-controls="tab-panel"
-              tabIndex={tab === key ? 0 : -1}
-              className="tab"
-              onClick={() => onTab(key)}
-            >
-              <Icon className="size-4" aria-hidden="true" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <Tabs tabs={TABS} current={tab} onChange={onTab} label="Sections du clan" idPrefix="tab" />
 
       <div
         key={`${clan.tag}-${tab}`}

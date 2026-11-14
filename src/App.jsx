@@ -1,84 +1,114 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ShieldCheck } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
+import { LayoutGrid, ShieldCheck, Swords } from 'lucide-react';
 import { useClan } from './hooks/useClan.js';
 import { useRecentClans } from './hooks/useRecentClans.js';
+import { useRoute } from './hooks/useRoute.js';
 import { useSpotlight } from './hooks/useSpotlight.js';
 import { normalizeTag } from './lib/tag.js';
 import Backdrop from './components/Backdrop.jsx';
 import ClanSearch from './components/ClanSearch.jsx';
 import Landing from './components/Landing.jsx';
 import ClanSkeleton from './components/ClanSkeleton.jsx';
-import ClanView, { TABS } from './components/ClanView.jsx';
-import PlayerDialog from './components/PlayerDialog.jsx';
+import ClanView from './components/ClanView.jsx';
+import PlayerPage from './components/PlayerPage.jsx';
+import Library from './components/Library.jsx';
 
 const DEFAULT_TITLE = document.title;
-const isTab = (key) => TABS.some(([k]) => k === key);
-
-// L'adresse reflète le clan, l'onglet et la fiche joueur affichés : ?clan=TAG&tab=guerres&joueur=TAG
-function readUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const tab = params.get('tab');
-  const player = normalizeTag(params.get('joueur') ?? '');
-  return {
-    tag: normalizeTag(params.get('clan') ?? ''),
-    tab: isTab(tab) ? tab : 'apercu',
-    player: player && `#${player}`,
-  };
-}
-
-function writeUrl(clan, tab, playerTag) {
-  const url = new URL(window.location.href);
-  url.search = '';
-  if (clan) {
-    url.searchParams.set('clan', clan.tag.replace('#', ''));
-    if (tab !== 'apercu') url.searchParams.set('tab', tab);
-  }
-  if (playerTag) url.searchParams.set('joueur', playerTag.replace('#', ''));
-  window.history.replaceState(null, '', url);
-}
+const NAV = [
+  ['compositions', 'Compositions', Swords],
+  ['bases', 'Bases', LayoutGrid],
+];
 
 export default function App() {
+  const { route, navigate } = useRoute();
   const { status, clan, demo, error, load, reset } = useClan();
   const { recent, remember, forget } = useRecentClans();
-  const [tab, setTab] = useState(() => readUrl().tab);
-  const [playerTag, setPlayerTag] = useState(() => readUrl().player);
   useSpotlight();
 
+  // Le clan de l'adresse est chargé et conservé pendant la visite des autres pages.
+  const loadedTag = clan ? normalizeTag(clan.tag) : null;
   useEffect(() => {
-    const { tag } = readUrl();
-    if (tag) load(tag);
-  }, [load]);
+    if (route.clan && route.clan !== loadedTag) load(route.clan);
+    if (!route.clan && loadedTag) reset();
+    // loadedTag est volontairement absent : on ne recharge que si l'adresse change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route.clan, load, reset]);
 
   useEffect(() => {
     if (clan) remember(clan);
   }, [clan, remember]);
 
   useEffect(() => {
-    writeUrl(clan, tab, playerTag);
-    document.title = clan ? `${clan.name} · Clash Creator` : DEFAULT_TITLE;
-  }, [clan, tab, playerTag]);
+    const titles = { compositions: 'Compositions', bases: 'Bases', player: `Joueur #${route.player}` };
+    const name = route.page === 'clan' ? clan?.name : titles[route.page];
+    document.title = name ? `${name} · Clash Creator` : DEFAULT_TITLE;
+  }, [route.page, route.player, clan]);
 
-  const goHome = useCallback(() => {
-    reset();
-    setTab('apercu');
-    window.scrollTo({ top: 0 });
-  }, [reset]);
-
-  const search = useCallback(
-    (tag) => {
-      window.scrollTo({ top: 0 });
-      load(tag);
-    },
-    [load],
+  const openClan = useCallback(
+    (tag) => navigate({ clan: normalizeTag(tag), tab: 'apercu', player: null, library: null }),
+    [navigate],
   );
+  const openPlayer = useCallback(
+    (tag) => navigate({ player: normalizeTag(tag), view: 'profil' }),
+    [navigate],
+  );
+  const goHome = useCallback(() => navigate({ clan: null, player: null, library: null }), [navigate]);
 
   const loading = status === 'loading';
+  const clanError = status === 'error' ? error : null;
+  // Le clan affiché correspond-il à celui de l'adresse ? (faux pendant un changement de clan)
+  const clanReady = clan && loadedTag === route.clan;
+
+  let page;
+  if (route.page === 'player') {
+    page = (
+      <PlayerPage
+        key={route.player}
+        tag={route.player}
+        view={route.view}
+        onView={(view) => navigate({ view }, { replace: true })}
+        clan={clanReady ? clan : null}
+        onOpenClan={openClan}
+        onBack={() => navigate({ player: null })}
+      />
+    );
+  } else if (route.page === 'compositions' || route.page === 'bases') {
+    page = <Library key={route.page} kind={route.page} />;
+  } else if (route.page === 'clan' && clan && !(clanError && !clanReady)) {
+    page = (
+      <ClanView
+        clan={clan}
+        demo={demo}
+        error={clanError}
+        refreshing={loading}
+        tab={route.tab}
+        onTab={(tab) => navigate({ tab }, { replace: true })}
+        onRefresh={() => load(route.clan)}
+        onSelectPlayer={openPlayer}
+        recent={recent}
+      />
+    );
+  } else if (route.page === 'clan' && loading) {
+    page = <ClanSkeleton />;
+  } else {
+    page = (
+      <Landing
+        onSearch={openClan}
+        onPlayer={openPlayer}
+        loading={loading}
+        error={route.page === 'clan' ? clanError : null}
+        recent={recent}
+        onForget={forget}
+      />
+    );
+  }
+  const onLanding = page.type === Landing;
 
   return (
     <>
       <Backdrop />
       <header className="sticky top-0 z-20 border-b border-white/[0.08] bg-ink-950/75 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:gap-5">
           <button
             type="button"
             onClick={goHome}
@@ -89,58 +119,43 @@ export default function App() {
               className="size-6 text-accent-400 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
               aria-hidden="true"
             />
-            <span className={clan ? 'hidden sm:inline' : ''}>
+            <span className={onLanding ? '' : 'hidden md:inline'}>
               Clash<span className="text-accent-400">Creator</span>
             </span>
           </button>
-          {clan && (
-            <ClanSearch
-              onSearch={search}
-              onPlayer={setPlayerTag}
-              loading={loading}
-              currentTag={clan.tag}
-              variant="compact"
-              hotkey
-            />
+          <nav aria-label="Bibliothèque" className="flex shrink-0 items-center gap-1 sm:gap-4">
+            {NAV.map(([key, label, Icon]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => navigate({ library: key, player: null })}
+                aria-current={route.page === key ? 'page' : undefined}
+                aria-label={label}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-md p-1.5 text-sm transition-colors hover:text-white ${
+                  route.page === key ? 'text-accent-400' : 'text-zinc-400'
+                }`}
+              >
+                <Icon className="size-4" aria-hidden="true" />
+                <span className={onLanding ? '' : 'hidden sm:inline'}>{label}</span>
+              </button>
+            ))}
+          </nav>
+          {!onLanding && (
+            <div className="ml-auto flex min-w-0 flex-1 justify-end">
+              <ClanSearch
+                onSearch={openClan}
+                onPlayer={openPlayer}
+                loading={loading}
+                currentTag={`${route.page}-${route.clan}-${route.player}`}
+                variant="compact"
+                hotkey
+              />
+            </div>
           )}
         </div>
       </header>
 
-      {clan ? (
-        <ClanView
-          clan={clan}
-          demo={demo}
-          error={status === 'error' ? error : null}
-          refreshing={loading}
-          tab={tab}
-          onTab={setTab}
-          onRefresh={() => load(normalizeTag(clan.tag))}
-          onSelectPlayer={setPlayerTag}
-          recent={recent}
-        />
-      ) : loading ? (
-        <ClanSkeleton />
-      ) : (
-        <Landing
-          onSearch={search}
-          onPlayer={setPlayerTag}
-          loading={loading}
-          error={status === 'error' ? error : null}
-          recent={recent}
-          onForget={forget}
-        />
-      )}
-
-      <PlayerDialog
-        tag={playerTag}
-        onClose={() => setPlayerTag(null)}
-        members={clan?.members}
-        currentClanTag={clan?.tag ?? null}
-        onOpenClan={(tag) => {
-          setPlayerTag(null);
-          search(normalizeTag(tag));
-        }}
-      />
+      {page}
 
       <footer className="border-t border-white/[0.08]">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">

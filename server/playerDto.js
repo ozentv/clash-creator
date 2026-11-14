@@ -77,6 +77,7 @@ export function toPlayerDto(raw) {
           bestTrophies: raw.bestBuilderBaseTrophies ?? 0,
           league: raw.builderBaseLeague?.name ?? null,
           heroes: (raw.heroes ?? []).filter((h) => h.village === 'builderBase').map(unit),
+          troops: (raw.troops ?? []).filter((u) => u.village === 'builderBase').map(unit),
         }
       : null,
     heroes,
@@ -92,6 +93,14 @@ export function toPlayerDto(raw) {
       spells: progress(spells),
       equipment: progress(equipment),
     },
+    achievements: (raw.achievements ?? []).map((a) => ({
+      name: a.name,
+      info: a.info ?? '',
+      stars: a.stars ?? 0,
+      value: a.value ?? 0,
+      target: a.target ?? 0,
+      village: a.village ?? 'home', // home | builderBase | clanCapital
+    })),
     career: CAREER_ACHIEVEMENTS.filter((name) => achievements.has(name)).map((name) => ({
       key: name,
       value: achievements.get(name),

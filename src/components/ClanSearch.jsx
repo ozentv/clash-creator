@@ -49,7 +49,7 @@ export default function ClanSearch({ onSearch, onPlayer, loading, currentTag, va
   useEffect(() => {
     setResults(null);
     setMessage(null);
-    if (currentTag) setValue('');
+    setValue('');
   }, [currentTag]);
 
   // Touche « / » pour chercher, Échap ou clic extérieur pour fermer la liste.
@@ -89,7 +89,7 @@ export default function ClanSearch({ onSearch, onPlayer, loading, currentTag, va
     if (mode === 'player') {
       const tag = normalizeTag(input);
       if (tag) {
-        onPlayer(`#${tag}`);
+        onPlayer(tag);
         setValue('');
       } else {
         setMessage('Tag de joueur invalide. Il se trouve sous le pseudo, sur le profil du joueur en jeu.');

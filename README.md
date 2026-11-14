@@ -6,12 +6,17 @@ Analyse un clan Clash of Clans à partir de son nom ou de son tag.
   niveau, hôtel de ville), composition du clan et membres probablement inactifs.
 - **Guerres** : guerre en cours, ligue de guerre de clans, historique des guerres.
 - **Capitale** : week-end de raid, attaques et or pillé par membre.
-- **Membres** : tableau triable et filtrable, fiche détaillée de chaque joueur.
+- **Membres** : tableau triable et filtrable.
 - **Comparer** : deux clans côte à côte.
 
-Un joueur se cherche aussi directement par son tag. Chaque clan et chaque fiche joueur a un lien
-partageable (`?clan=TAG&tab=guerres&joueur=TAG`) et les clans consultés sont mémorisés
-dans le navigateur.
+- **Page joueur** : fiche complète d'un compte, accessible par tag ou en cliquant sur un pseudo —
+  profil, armée (héros, équipements, familiers, troupes, sorts, engins), carrière et succès.
+- **Bibliothèque** : pages Compositions et Bases, alimentées par les fichiers de `src/data`
+  (voir `src/data/README.md`), avec les liens de partage du jeu.
+
+L'adresse reflète la page affichée (`?clan=TAG&tab=guerres`, `?joueur=TAG&vue=armee`,
+`?page=compositions`) : tout lien est partageable et le bouton « précédent » fonctionne.
+Les clans consultés sont mémorisés dans le navigateur.
 
 ## Démarrage
 
@@ -59,9 +64,11 @@ server/               Proxy Express : garde le token secret et contourne l'absen
   demoData.js         Données fictives du mode démo
 src/
   api/clashApi.js     Appels du front vers le proxy
-  hooks/              useClan, useAsync, useRecentClans, useReveal, useSpotlight
+  hooks/              useRoute (navigation), useClan, useAsync, useRecentClans, useReveal, useSpotlight
   lib/                Logique pure : tag, classements, statistiques, formats, export PNG
-  components/         Landing (accueil), ClanView (tableau de bord et onglets), panneaux, fiche joueur
+  data/               Bibliothèque : compositions.json et bases.json
+  assets/             Images facultatives : units/ (icônes d'unités), bases/ (captures de bases)
+  components/         Landing, ClanView, PlayerPage, Library et leurs panneaux
 tests/                Tests node:test de lib/ et de server/
 ```
 

@@ -167,6 +167,11 @@ export function buildDemoPlayer(tag) {
       bestTrophies: 2600 + th * 90,
       league: 'Brass League I',
       heroes: [{ name: 'Battle Machine', level: 12 + th, maxLevel: 35 }],
+      troops: [
+        { name: 'Raged Barbarian', level: 14, maxLevel: 20 },
+        { name: 'Sneaky Archer', level: 16, maxLevel: 20 },
+        { name: 'Boxer Giant', level: 12, maxLevel: 20 },
+      ],
     },
     heroes,
     equipment,
@@ -176,6 +181,14 @@ export function buildDemoPlayer(tag) {
     siegeMachines: units([['Wall Wrecker', 12, 5], ['Battle Blimp', 12, 4], ['Stone Slammer', 12, 5], ['Siege Barracks', 13, 5], ['Log Launcher', 13, 5]]),
     activeSuperTroops: th >= 11 ? ['Super Barbarian', 'Sneaky Goblin'] : [],
     progress: { heroes: pct(heroes), troops: pct(troops), spells: pct(spells), equipment: pct(equipment) },
+    achievements: [
+      ['Bigger Coffers', 'Upgrade a Gold Storage to level 10', 3, 16, 10, 'home'],
+      ['Get those Goblins!', 'Win 150 Stars on the Campaign Map', 3, 270, 150, 'home'],
+      ['Nice and Tidy', 'Remove 500 obstacles', 2, 380, 500, 'home'],
+      ['War Hero', 'Score 1000 Stars for your clan in Clan War battles', 2, 300 + th * 55, 1000, 'home'],
+      ['Un-Build It', 'Destroy 2000 Builder Halls in Builder Battles', 1, 420, 2000, 'builderBase'],
+      ['Aggressive Capitalism', 'Loot 3000000 Capital Gold during Raid attacks', 2, 2400000, 3000000, 'clanCapital'],
+    ].map(([name, info, stars, value, target, village]) => ({ name, info, stars, value, target, village })),
     career: [
       ['Conqueror', 4200 + th * 310], ['Unbreakable', 900 + th * 40], ['Humiliator', 5100 + th * 280],
       ['War League Legend', 180 + th * 22], ['Games Champion', 96000 + th * 9000],

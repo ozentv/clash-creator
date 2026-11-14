@@ -1,0 +1,40 @@
+[
+  {
+    "id": "exemple-electro-dragons-hdv11",
+    "nom": "Électro-dragons et ballons",
+    "hdv": 11,
+    "style": "Aérien",
+    "troupes": [
+      { "nom": "Electro Dragon", "nombre": 8 },
+      { "nom": "Balloon", "nombre": 4 }
+    ],
+    "sorts": [
+      { "nom": "Rage Spell", "nombre": 3 },
+      { "nom": "Freeze Spell", "nombre": 2 }
+    ],
+    "engin": "Battle Blimp",
+    "note": "Ouvrir un côté avec deux électro-dragons, puis lancer le reste en ligne vers le centre. La rage sert au moment d'entrer dans le cœur du village.",
+    "lien": "",
+    "exemple": true
+  },
+  {
+    "id": "exemple-molosses-ballons-hdv10",
+    "nom": "Molosses et ballons",
+    "hdv": 10,
+    "style": "Aérien",
+    "troupes": [
+      { "nom": "Lava Hound", "nombre": 3 },
+      { "nom": "Balloon", "nombre": 24 },
+      { "nom": "Minion", "nombre": 10 }
+    ],
+    "sorts": [
+      { "nom": "Rage Spell", "nombre": 2 },
+      { "nom": "Haste Spell", "nombre": 4 },
+      { "nom": "Poison Spell", "nombre": 1 }
+    ],
+    "engin": "",
+    "note": "Les molosses encaissent les défenses antiaériennes, les ballons suivent derrière. Les gargouilles nettoient à la fin.",
+    "lien": "",
+    "exemple": true
+  }
+]

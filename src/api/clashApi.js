@@ -58,3 +58,4 @@ export const getRoster = (tag) => get(`/api/clan/${clean(tag)}/roster`).then((b)
 export const getLocations = () => get('/api/rankings/locations').then((b) => b.locations);
 export const getRanking = (location, kind) =>
   get(`/api/rankings/${encodeURIComponent(location)}/${kind}`).then((b) => b.ranking);
+export const getWarStats = (tag) => get(`/api/clan/${clean(tag)}/war-stats`); // { enabled, wars, members }

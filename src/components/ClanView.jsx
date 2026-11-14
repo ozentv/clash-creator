@@ -13,6 +13,7 @@ import RaidPanel from './RaidPanel.jsx';
 import CompareClans from './CompareClans.jsx';
 import HistoryTab from './HistoryTab.jsx';
 import WarPlan from './WarPlan.jsx';
+import WarStats from './WarStats.jsx';
 import Tabs from './Tabs.jsx';
 import DemoBanner from './DemoBanner.jsx';
 
@@ -64,6 +65,7 @@ export default function ClanView({ clan, demo, error, refreshing, tab, onTab, on
             <WarPanel clanTag={clan.tag} onSelectPlayer={onSelectPlayer} />
             <WarPlan clanTag={clan.tag} plan={plan} onPlan={onPlan} />
             <LeaguePanel clanTag={clan.tag} onSelectPlayer={onSelectPlayer} />
+            <WarStats clan={clan} onSelectPlayer={onSelectPlayer} />
             <WarLog clanTag={clan.tag} />
           </>
         )}

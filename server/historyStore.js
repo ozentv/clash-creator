@@ -117,3 +117,117 @@ export async function trackedClans() {
   );
   return rows.map((r) => r.clan_tag);
 }
+
+// ---------- Guerres ----------
+// Le jeu ne donne le détail par membre que pour la guerre en cours : chaque guerre consultée
+// (ou vue par /api/cron/snapshot) est donc enregistrée, puis mise à jour jusqu'à sa fin.
+
+const initWars = once(
+  `create table if not exists war_records (
+     clan_tag text not null,
+     war_key text not null,
+     data jsonb not null,
+     updated_at timestamptz not null default now(),
+     primary key (clan_tag, war_key)
+   )`,
+);
+
+// Ne garde d'une guerre que ce qui sert au bilan.
+export function toWarRecord(war, kind = 'classique') {
+  return {
+    kind, // classique | ligue
+    state: war.state,
+    endTime: war.endTime,
+    attacksPerMember: war.attacksPerMember,
+    stars: war.clan.stars,
+    opponentStars: war.opponent.stars,
+    destruction: war.clan.destruction,
+    opponentDestruction: war.opponent.destruction,
+    opponentName: war.opponent.name,
+    members: war.members.map((m) => ({
+      tag: m.tag,
+      name: m.name,
+      attacks: m.attacks.map((a) => ({ stars: a.stars, destruction: a.destruction })),
+    })),
+  };
+}
+
+const lastWarSave = new Map(); // "clan|guerre" -> { at, state }
+
+export async function recordWar(clanTag, war, kind) {
+  if (!dbEnabled || !war?.endTime || !war.members || !['inWar', 'warEnded'].includes(war.state)) return;
+  const key = `${clanTag}|${war.endTime}`;
+  const last = lastWarSave.get(key);
+  // Une écriture toutes les dix minutes au plus, sauf au moment où la guerre se termine.
+  if (last && last.state === war.state && Date.now() - last.at < 10 * 60_000) return;
+  if (lastWarSave.size > 2000) lastWarSave.clear();
+  lastWarSave.set(key, { at: Date.now(), state: war.state });
+  try {
+    await initWars();
+    await pool.query(
+      `insert into war_records (clan_tag, war_key, data) values ($1, $2, $3)
+       on conflict (clan_tag, war_key) do update set data = excluded.data, updated_at = now()`,
+      [clanTag, war.endTime, toWarRecord(war, kind)],
+    );
+    await pool.query(`delete from war_records where updated_at < now() - interval '365 days'`);
+  } catch (err) {
+    lastWarSave.delete(key);
+    console.error('Historique des guerres :', err.message);
+  }
+}
+
+// Bilan par membre sur les guerres terminées (de la plus récente à la plus ancienne).
+export function summarizeWars(records) {
+  const ended = records
+    .filter((r) => r.state === 'warEnded')
+    .sort((a, b) => (a.endTime < b.endTime ? 1 : -1));
+  const byMember = new Map();
+  for (const war of ended) {
+    for (const m of war.members) {
+      const s = byMember.get(m.tag) ?? { tag: m.tag, name: m.name, wars: 0, possible: 0, attacks: 0, stars: 0, destruction: 0, triples: 0 };
+      s.wars += 1;
+      s.possible += war.attacksPerMember;
+      for (const a of m.attacks) {
+        s.attacks += 1;
+        s.stars += a.stars;
+        s.destruction += a.destruction;
+        if (a.stars === 3) s.triples += 1;
+      }
+      byMember.set(m.tag, s);
+    }
+  }
+  const members = [...byMember.values()]
+    .map((s) => ({
+      tag: s.tag,
+      name: s.name,
+      wars: s.wars,
+      attacks: s.attacks,
+      possible: s.possible,
+      missed: s.possible - s.attacks,
+      stars: s.stars,
+      averageStars: s.attacks ? Math.round((s.stars / s.attacks) * 100) / 100 : null,
+      averageDestruction: s.attacks ? Math.round(s.destruction / s.attacks) : null,
+      triples: s.triples,
+    }))
+    .sort((a, b) => b.stars - a.stars || a.missed - b.missed || a.name.localeCompare(b.name));
+  return {
+    wars: ended.map((w) => ({
+      kind: w.kind,
+      endTime: w.endTime,
+      opponentName: w.opponentName,
+      stars: w.stars,
+      opponentStars: w.opponentStars,
+      result:
+        w.stars !== w.opponentStars
+          ? w.stars > w.opponentStars ? 'win' : 'lose'
+          : w.destruction === w.opponentDestruction ? 'tie' : w.destruction > w.opponentDestruction ? 'win' : 'lose',
+    })),
+    members,
+  };
+}
+
+export async function warStats(clanTag) {
+  await initWars();
+  const { rows } = await pool.query(`select data from war_records where clan_tag = $1`, [clanTag]);
+  return summarizeWars(rows.map((r) => r.data));
+}

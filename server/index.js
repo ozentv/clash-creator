@@ -40,11 +40,21 @@ import {
   buildDemoPlayerHistory,
   buildDemoRoster,
   buildDemoRanking,
+  buildDemoWarRecords,
   DEMO_LOCATIONS,
 } from './demoData.js';
 
 import { addEntry, dbEnabled, listLibrary, removeEntry } from './libraryStore.js';
-import { clanHistory, playerHistory, recordSnapshot, summarize, trackedClans } from './historyStore.js';
+import {
+  clanHistory,
+  playerHistory,
+  recordSnapshot,
+  recordWar,
+  summarize,
+  summarizeWars,
+  trackedClans,
+  warStats,
+} from './historyStore.js';
 import { cleanEntry, KINDS } from '../src/lib/libraryRules.js';
 
 const PORT = process.env.PORT ?? 3001;
@@ -231,8 +241,17 @@ app.get(
   }),
 );
 
+app.get(
+  '/api/clan/:tag/war-stats',
+  withTag(async (tag) => {
+    if (DEMO) return { enabled: true, ...summarizeWars(buildDemoWarRecords()) };
+    if (!dbEnabled) return { enabled: false, wars: [], members: [] };
+    return { enabled: true, ...(await warStats(`#${tag}`).catch(historyError)) };
+  }),
+);
+
 // À appeler régulièrement par un service de surveillance (UptimeRobot, cron-job.org…) :
-// met à jour le relevé du jour de chaque clan suivi, même sans visiteur. Une fois par heure au plus.
+// met à jour le relevé du jour et la guerre en cours de chaque clan suivi, même sans visiteur. Une fois par heure au plus.
 let lastCron = 0;
 app.get('/api/cron/snapshot', async (req, res) => {
   if (DEMO || !dbEnabled) return res.json({ ok: true, updated: 0 });
@@ -244,6 +263,9 @@ app.get('/api/cron/snapshot', async (req, res) => {
       const clan = await fetchClan(tag.replace('#', ''), TOKEN).then(toClanDto).catch(() => null);
       if (!clan) continue;
       await recordSnapshot(clan);
+      // La guerre en cours est relevée aussi, pour ne pas manquer son résultat final.
+      const war = await fetchCurrentWar(tag.replace('#', ''), TOKEN).then(toWarDto).catch(() => null);
+      if (war) await recordWar(tag, war);
       updated += 1;
     }
     res.json({ ok: true, updated });
@@ -303,7 +325,9 @@ app.get(
   withTag(async (tag) => {
     if (DEMO) return { war: buildDemoWar(tag) };
     try {
-      return { war: toWarDto(await fetchCurrentWar(tag, TOKEN)) };
+      const war = toWarDto(await fetchCurrentWar(tag, TOKEN));
+      recordWar(`#${tag}`, war); // pour le bilan des membres, sans attendre
+      return { war };
     } catch (err) {
       // Le clan vient d'être chargé avec ce même token : un 403 ici
       // signifie que son journal de guerre est privé.
@@ -331,7 +355,9 @@ app.get(
   withTag(async (tag) => {
     if (DEMO) return { league: buildDemoLeague() };
     try {
-      return { league: await loadLeague(tag, TOKEN) };
+      const { records, ...league } = await loadLeague(tag, TOKEN);
+      for (const record of records) recordWar(`#${tag}`, record, 'ligue');
+      return { league };
     } catch (err) {
       // 404 : le clan ne participe pas à la ligue ce mois-ci.
       if (err instanceof CocApiError && err.status === 404) return { league: { state: 'none' } };

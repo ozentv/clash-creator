@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { formatCountdown, upcomingEvents } from '../src/lib/events.js';
 import { decodePlan, encodePlan, reviewPlan } from '../src/lib/warPlan.js';
 import { assessMember, remainingUpgrades, whoCanPlay } from '../src/lib/army.js';
-import { summarize, toSnapshot } from '../server/historyStore.js';
+import { summarize, summarizeWars, toSnapshot, toWarRecord } from '../server/historyStore.js';
 import { toRankingDto, toRosterEntry } from '../server/cocClient.js';
 
 const at = (iso) => Date.parse(iso);
@@ -98,4 +98,36 @@ test('classements et effectif : conversion des réponses', () => {
   assert.equal(toRankingDto({ items: [{ rank: 1, tag: '#P', name: 'P', trophies: 6000, clan: { name: 'Clan', tag: '#C' } }] }, 'players')[0].clanName, 'Clan');
   const entry = toRosterEntry({ tag: '#P', name: 'P', townHallLevel: 13, troops: [{ name: 'Dragon', level: 8, maxLevel: 12, village: 'home' }, { name: 'Bomber', level: 3, maxLevel: 20, village: 'builderBase' }] });
   assert.deepEqual(entry.levels, { Dragon: { level: 8, maxLevel: 12 } });
+});
+
+test('le bilan de guerre agrège les guerres terminées par membre', () => {
+  const war = (endTime, state, stars, opponentStars, members, attacksPerMember = 2) => ({
+    kind: 'classique', state, endTime, attacksPerMember, stars, opponentStars, destruction: 90, opponentDestruction: 80, opponentName: 'X', members,
+  });
+  const a = (...attacks) => attacks.map(([stars, destruction]) => ({ stars, destruction }));
+  const { wars, members } = summarizeWars([
+    war('2026-11-01T10:00:00.000Z', 'warEnded', 5, 4, [
+      { tag: '#A', name: 'Alice', attacks: a([3, 100], [2, 80]) },
+      { tag: '#B', name: 'Bob', attacks: a([1, 50]) },
+    ]),
+    war('2026-11-05T10:00:00.000Z', 'warEnded', 3, 3, [
+      { tag: '#A', name: 'Alice', attacks: a([3, 100]) },
+      { tag: '#C', name: 'Chloé', attacks: [] },
+    ]),
+    war('2026-11-09T10:00:00.000Z', 'inWar', 9, 0, [{ tag: '#A', name: 'Alice', attacks: a([3, 100], [3, 100]) }]), // en cours : ignorée
+  ]);
+  assert.deepEqual(wars.map((w) => [w.endTime.slice(0, 10), w.result]), [['2026-11-05', 'win'], ['2026-11-01', 'win']]);
+  assert.deepEqual(members.map((m) => m.name), ['Alice', 'Bob', 'Chloé']);
+  assert.deepEqual(members[0], { tag: '#A', name: 'Alice', wars: 2, attacks: 3, possible: 4, missed: 1, stars: 8, averageStars: 2.67, averageDestruction: 93, triples: 2 });
+  assert.deepEqual([members[2].missed, members[2].averageStars], [2, null]);
+});
+
+test('toWarRecord ne garde que ce qui sert au bilan', () => {
+  const record = toWarRecord({
+    state: 'warEnded', endTime: '2026-11-01T10:00:00.000Z', attacksPerMember: 2,
+    clan: { name: 'Nous', stars: 30, destruction: 88 }, opponent: { name: 'Eux', stars: 28, destruction: 80 },
+    members: [{ tag: '#A', name: 'Alice', position: 1, townHallLevel: 15, attacks: [{ stars: 3, destruction: 100, defenderPosition: 2 }] }],
+  });
+  assert.deepEqual(record.members, [{ tag: '#A', name: 'Alice', attacks: [{ stars: 3, destruction: 100 }] }]);
+  assert.deepEqual([record.kind, record.opponentName, record.stars], ['classique', 'Eux', 30]);
 });

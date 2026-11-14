@@ -5,7 +5,7 @@ Analyse un clan Clash of Clans à partir de son nom ou de son tag.
 - **Aperçu** : chiffres clés, cinq classements exportables en image (trophées, dons, bilan des dons,
   niveau, hôtel de ville), composition du clan et membres probablement inactifs.
 - **Guerres** : guerre en cours, plan d'attaque partageable par lien, ligue de guerre de clans,
-  historique des guerres.
+  bilan de chaque membre sur les guerres enregistrées (étoiles, attaques manquées), historique.
 - **Capitale** : week-end de raid, attaques et or pillé par membre.
 - **Membres** : tableau triable et filtrable.
 - **Évolution** : courbes des trophées, des membres et des dons, arrivées et départs
@@ -79,7 +79,8 @@ Dix mots de passe erronés depuis la même adresse bloquent les tentatives penda
 ### Historique (facultatif)
 
 Avec `DATABASE_URL`, le site enregistre un relevé de chaque clan consulté, une fois par jour
-(conservé 180 jours). Sans visite, pas de relevé : pour un suivi sans trou, fais appeler
+(conservé 180 jours), ainsi que le détail de chaque guerre vue dans l'onglet Guerres (conservé un an),
+car le jeu ne fournit le détail par membre que pour la guerre en cours. Sans visite, pas de relevé : pour un suivi sans trou, fais appeler
 `/api/cron/snapshot` toutes les heures par un service de surveillance (UptimeRobot, cron-job.org…).
 Cet appel met à jour tous les clans consultés dans les 30 derniers jours, et évite au passage que
 le service ne s'endorme sur l'offre gratuite de Render.
@@ -118,6 +119,7 @@ tests/                Tests node:test de lib/ et de server/
 | `GET /api/clan/:tag/raids` | Dernier week-end de raid |
 | `GET /api/player/:tag` | Fiche joueur |
 | `GET /api/clan/:tag/history`, `GET /api/player/:tag/history` | Relevés quotidiens |
+| `GET /api/clan/:tag/war-stats` | Bilan des membres sur les guerres enregistrées |
 | `GET /api/clan/:tag/roster` | Niveaux des unités de chaque membre |
 | `GET /api/rankings/locations`, `GET /api/rankings/:pays/:type` | Classements par pays |
 | `GET /api/cron/snapshot` | Mise à jour planifiée des relevés |

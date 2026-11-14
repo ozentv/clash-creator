@@ -241,6 +241,7 @@ export async function loadLeague(tag, token) {
   const group = await fetchLeagueGroup(tag, token);
   const ourTag = '#' + tag;
   const rounds = [];
+  const records = []; // chaque manche au format d'une guerre, pour l'historique
   const stats = new Map();
 
   for (const [index, round] of (group.rounds ?? []).entries()) {
@@ -269,6 +270,18 @@ export async function loadLeague(tag, token) {
     });
 
     if (war.state === 'preparation') continue;
+    records.push({
+      state: war.state,
+      endTime: toIsoDate(war.endTime),
+      attacksPerMember: 1,
+      clan: { stars: us.stars ?? 0, destruction: us.destructionPercentage ?? 0 },
+      opponent: { name: them.name, stars: them.stars ?? 0, destruction: them.destructionPercentage ?? 0 },
+      members: (us.members ?? []).map((m) => ({
+        tag: m.tag,
+        name: m.name,
+        attacks: (m.attacks ?? []).map((a) => ({ stars: a.stars, destruction: a.destructionPercentage })),
+      })),
+    });
     for (const m of us.members ?? []) {
       const s = stats.get(m.tag) ?? { tag: m.tag, name: m.name, wars: 0, attacks: 0, stars: 0, destruction: 0 };
       s.wars += 1;
@@ -287,6 +300,7 @@ export async function loadLeague(tag, token) {
     clans: (group.clans ?? []).map((c) => ({ tag: c.tag, name: c.name })),
     rounds,
     members: [...stats.values()].sort((a, b) => b.stars - a.stars || b.destruction - a.destruction),
+    records,
   };
 }
 

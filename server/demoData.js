@@ -365,3 +365,39 @@ export function buildDemoRanking(kind) {
       : { rank: i + 1, previousRank, tag: `#QQ${TAG_CHARS[Math.floor(i / 14)]}${TAG_CHARS[i % 14]}`, name, expLevel: 260 - i * 2, trophies: 6400 - i * 37, attackWins: 180 - i * 3, clanName: 'Les Démos FR', clanTag: '#2PP' };
   });
 }
+
+// Guerres passées fictives, au format enregistré par l'historique (voir historyStore.toWarRecord).
+export function buildDemoWarRecords() {
+  const rand = seeded(91);
+  const roster = buildMembers().slice(0, 18);
+  const opponents = ['Les Rivaux', 'Team Foudre', 'Dragons Noirs', 'Phoenix FR', 'La Horde', 'War Machine', 'Les Loups', 'Titans'];
+  return opponents.map((opponentName, w) => {
+    const league = w === 2 || w === 5;
+    const attacksPerMember = league ? 1 : 2;
+    const members = roster.slice(w % 3, (w % 3) + 15).map((m, i) => {
+      // Certains membres oublient régulièrement leurs attaques.
+      const lazy = (i + w) % 6 === 0 ? 0 : (i + w) % 5 === 0 ? 1 : attacksPerMember;
+      return {
+        tag: m.tag,
+        name: m.name,
+        attacks: Array.from({ length: Math.min(lazy, attacksPerMember) }, () => {
+          const stars = Math.min(3, 1 + Math.floor(rand() * 2.6));
+          return { stars, destruction: stars === 3 ? 100 : Math.floor(52 + rand() * 46) };
+        }),
+      };
+    });
+    const stars = members.reduce((n, m) => n + Math.max(0, ...m.attacks.map((a) => a.stars)), 0);
+    return {
+      kind: league ? 'ligue' : 'classique',
+      state: 'warEnded',
+      endTime: new Date(Date.now() - (w * 3 + 2) * 86_400_000).toISOString(),
+      attacksPerMember,
+      stars,
+      opponentStars: stars + Math.round((rand() - 0.55) * 8),
+      destruction: 80 + rand() * 15,
+      opponentDestruction: 78 + rand() * 15,
+      opponentName,
+      members,
+    };
+  });
+}

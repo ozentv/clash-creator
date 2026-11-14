@@ -24,7 +24,7 @@ export default function InactiveMembers({ members, onSelectPlayer }) {
       ) : (
         <ul className="grid gap-px bg-white/5 sm:grid-cols-2">
           {inactive.map((m) => (
-            <li key={m.tag} className="bg-ink-900 px-4 py-3">
+            <li key={m.tag} className="bg-ink-900 px-4 py-3 transition-colors hover:bg-ink-800">
               <div className="flex items-baseline justify-between gap-3">
                 <button
                   type="button"

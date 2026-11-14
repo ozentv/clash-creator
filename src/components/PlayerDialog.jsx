@@ -65,7 +65,7 @@ function PlayerSheet({ player }) {
                 </div>
                 <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ink-700">
                   <div
-                    className="h-full rounded-full bg-accent-400"
+                    className="bar-grow h-full rounded-full bg-accent-400"
                     style={{ width: `${Math.min(100, (h.level / h.maxLevel) * 100)}%` }}
                   />
                 </div>
@@ -114,7 +114,11 @@ export default function PlayerDialog({ tag, onClose }) {
             {error}
           </p>
         )}
-        {status === 'success' && <PlayerSheet player={player} />}
+        {status === 'success' && (
+          <div className="rise">
+            <PlayerSheet player={player} />
+          </div>
+        )}
       </div>
     </dialog>
   );

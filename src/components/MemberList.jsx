@@ -43,7 +43,7 @@ export default function MemberList({ members, onSelectPlayer }) {
           </thead>
           <tbody>
             {filtered.map((m) => (
-              <tr key={m.tag} className="border-t border-white/5 hover:bg-white/[0.03]">
+              <tr key={m.tag} className="row-hover border-t border-white/5">
                 <td className="px-4 py-2.5">
                   <button type="button" onClick={() => onSelectPlayer(m.tag)} className="player-link">
                     {m.name}

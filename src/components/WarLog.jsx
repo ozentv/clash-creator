@@ -44,7 +44,7 @@ export default function WarLog({ clanTag }) {
             </p>
             <ol className="divide-y divide-white/5">
               {wars.map((w, i) => (
-                <li key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm">
+                <li key={i} className="row-hover flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm">
                   <span className="w-14 shrink-0 text-xs text-zinc-500">{formatDate(w.endTime)}</span>
                   <ResultBadge result={w.result} />
                   <span className="min-w-0 flex-1 truncate text-zinc-200">contre {w.opponentName}</span>

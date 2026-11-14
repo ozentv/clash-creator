@@ -72,7 +72,7 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
                 </thead>
                 <tbody>
                   {raid.members.map((m) => (
-                    <tr key={m.tag} className="border-t border-white/5">
+                    <tr key={m.tag} className="row-hover border-t border-white/5">
                       <td className="px-4 py-2">
                         <button type="button" onClick={() => onSelectPlayer(m.tag)} className="player-link">
                           {m.name}

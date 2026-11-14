@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useClan } from './hooks/useClan.js';
 import { useRecentClans } from './hooks/useRecentClans.js';
 import { normalizeTag } from './lib/tag.js';
+import { Swords } from 'lucide-react';
+import Backdrop from './components/Backdrop.jsx';
 import HeroArt from './components/HeroArt.jsx';
 import ClanSearch from './components/ClanSearch.jsx';
 import ClanHeader from './components/ClanHeader.jsx';
@@ -47,21 +49,28 @@ export default function App() {
 
   return (
     <>
+      <Backdrop />
       <header className="sticky top-0 z-10 border-b border-white/10 bg-ink-950/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center px-4">
-          <a href="#" className="font-display text-xl text-white">
-            Clash<span className="text-accent-400">Creator</span>
+          <a href="#" className="group flex items-center gap-2 font-display text-xl text-white">
+            <Swords
+              className="size-5 text-accent-400 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
+              aria-hidden="true"
+            />
+            <span>
+              Clash<span className="text-accent-400">Creator</span>
+            </span>
           </a>
         </div>
       </header>
 
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6">
-        <section className="relative overflow-hidden rounded-2xl border border-white/10">
+        <section className="rise relative overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_60px_-30px_rgb(245_197_49/0.35)]">
           <HeroArt />
           <div className="absolute inset-0 bg-gradient-to-b from-ink-950/25 via-ink-950/40 to-ink-950/85" />
           <div className={`relative px-4 text-center ${clan ? 'py-8' : 'py-14 sm:py-20'}`}>
             <h1 className="font-display text-3xl text-white sm:text-5xl">
-              Analyse ton clan <span className="text-accent-400">en un clic</span>
+              Analyse ton clan <span className="text-shine">en un clic</span>
             </h1>
             <p className="mt-2 mb-6 text-sm text-zinc-300">
               Guerres, ligue, raids de capitale, classements et fiches joueurs.
@@ -107,7 +116,13 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <div id="tab-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-4">
+            <div
+              key={`${clan.tag}-${tab}`}
+              id="tab-panel"
+              role="tabpanel"
+              aria-labelledby={`tab-${tab}`}
+              className="stagger flex flex-col gap-4"
+            >
               {tab === 'apercu' && (
                 <>
                   <StatCards members={clan.members} />

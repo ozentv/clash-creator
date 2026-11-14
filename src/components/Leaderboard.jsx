@@ -101,7 +101,7 @@ export default function Leaderboard({ clan, onSelectPlayer }) {
         </div>
         <ol className="divide-y divide-white/5 rounded-lg border border-white/10">
           {rows.map((m) => (
-            <li key={m.tag} className="flex items-center gap-3 px-3 py-2.5">
+            <li key={m.tag} className="row-hover flex items-center gap-3 px-3 py-2.5">
               <span
                 className={`grid size-7 shrink-0 place-items-center rounded-md text-sm font-bold tabular-nums ${
                   PODIUM[m.rank] ?? 'bg-ink-800 text-zinc-400'

@@ -80,7 +80,13 @@ function WarContent({ war, onSelectPlayer }) {
     <>
       <div className="border-b border-white/10 p-4">
         <p className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-zinc-400">
-          <span className="rounded-md bg-accent-400/10 px-2 py-0.5 font-semibold text-accent-400">
+          <span className="flex items-center gap-1.5 rounded-md bg-accent-400/10 px-2 py-0.5 font-semibold text-accent-400">
+            {war.state === 'inWar' && (
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent-400 opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-accent-400" />
+              </span>
+            )}
             {STATE_LABELS[war.state] ?? war.state}
           </span>
           <span>
@@ -98,6 +104,18 @@ function WarContent({ war, onSelectPlayer }) {
           <span className="text-xs font-semibold tracking-widest text-zinc-600">VS</span>
           <Side side={war.opponent} align="right" />
         </div>
+        {fighting && war.clan.stars + war.opponent.stars > 0 && (
+          <div
+            className="mt-3 flex h-1.5 overflow-hidden rounded-full bg-ink-700"
+            role="img"
+            aria-label={`${war.clan.stars} étoiles contre ${war.opponent.stars}`}
+          >
+            <div
+              className="bar-grow rounded-full bg-accent-400"
+              style={{ width: `${(war.clan.stars / (war.clan.stars + war.opponent.stars)) * 100}%` }}
+            />
+          </div>
+        )}
       </div>
 
       {fighting && (
@@ -128,7 +146,7 @@ function WarContent({ war, onSelectPlayer }) {
 
       <ol className="divide-y divide-white/5">
         {war.members.map((m) => (
-          <li key={m.tag} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+          <li key={m.tag} className="row-hover flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
             <span className="w-6 shrink-0 text-sm text-zinc-500 tabular-nums">{m.position}</span>
             <span className="min-w-0 flex-1">
               <button
@@ -164,13 +182,23 @@ export default function WarPanel({ clanTag, onSelectPlayer }) {
         <Swords className="size-4 text-accent-400" aria-hidden="true" />
         Guerre de clan
       </h3>
-      {status === 'loading' && <p className="p-4 text-sm text-zinc-400">Chargement de la guerre…</p>}
+      {status === 'loading' && (
+        <div role="status" aria-label="Chargement" className="flex flex-col gap-3 p-4">
+          <div className="skeleton h-16 w-full" />
+          <div className="skeleton h-4 w-2/3" />
+          <div className="skeleton h-4 w-5/6" />
+        </div>
+      )}
       {status === 'error' && (
         <p role="alert" className="p-4 text-sm text-red-300">
           {error}
         </p>
       )}
-      {status === 'success' && <WarContent war={war} onSelectPlayer={onSelectPlayer} />}
+      {status === 'success' && (
+        <div className="rise">
+          <WarContent war={war} onSelectPlayer={onSelectPlayer} />
+        </div>
+      )}
     </section>
   );
 }

@@ -18,7 +18,7 @@ export default function ClanHeader({ clan }) {
   }
 
   return (
-    <section className="card flex flex-col items-center gap-4 p-5 text-center sm:flex-row sm:text-left">
+    <section className="card rise flex flex-col items-center gap-4 p-5 text-center sm:flex-row sm:text-left">
       {clan.badgeUrl ? (
         <img src={clan.badgeUrl} alt="" className="size-20 shrink-0" />
       ) : (

@@ -31,7 +31,7 @@ export default function LeaguePanel({ clanTag, onSelectPlayer }) {
             ) : (
               <ol className="divide-y divide-white/5 border-b border-white/10">
                 {league.rounds.map((r) => (
-                  <li key={r.round} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm">
+                  <li key={r.round} className="row-hover flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm">
                     <span className="w-20 shrink-0 text-xs text-zinc-500">Manche {r.round}</span>
                     {r.result ? (
                       <ResultBadge result={r.result} />
@@ -64,7 +64,7 @@ export default function LeaguePanel({ clanTag, onSelectPlayer }) {
                   </thead>
                   <tbody>
                     {league.members.map((m) => (
-                      <tr key={m.tag} className="border-t border-white/5">
+                      <tr key={m.tag} className="row-hover border-t border-white/5">
                         <td className="px-4 py-2">
                           <button type="button" onClick={() => onSelectPlayer(m.tag)} className="player-link">
                             {m.name}

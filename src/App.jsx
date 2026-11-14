@@ -11,17 +11,23 @@ import MemberList from './components/MemberList.jsx';
 import WarPanel from './components/WarPanel.jsx';
 import InactiveMembers from './components/InactiveMembers.jsx';
 import PlayerDialog from './components/PlayerDialog.jsx';
+import WarLog from './components/WarLog.jsx';
+import LeaguePanel from './components/LeaguePanel.jsx';
+import RaidPanel from './components/RaidPanel.jsx';
+import CompareClans from './components/CompareClans.jsx';
 
-const NAV_LINKS = [
-  ['#guerre', 'Guerre'],
-  ['#classements', 'Classements'],
-  ['#inactifs', 'À surveiller'],
-  ['#membres', 'Membres'],
+const TABS = [
+  ['apercu', 'Aperçu'],
+  ['guerres', 'Guerres'],
+  ['capitale', 'Capitale'],
+  ['membres', 'Membres'],
+  ['comparer', 'Comparer'],
 ];
 
 export default function App() {
   const { status, clan, demo, error, load } = useClan();
   const [playerTag, setPlayerTag] = useState(null);
+  const [tab, setTab] = useState('apercu');
   const { recent, remember, forget } = useRecentClans();
 
   // Lien partageable : ?clan=TAG ouvre directement le clan.
@@ -42,19 +48,10 @@ export default function App() {
   return (
     <>
       <header className="sticky top-0 z-10 border-b border-white/10 bg-ink-950/85 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-8 px-4">
+        <div className="mx-auto flex h-14 max-w-6xl items-center px-4">
           <a href="#" className="font-display text-xl text-white">
             Clash<span className="text-accent-400">Creator</span>
           </a>
-          {clan && (
-            <nav aria-label="Sections" className="hidden gap-6 text-sm text-zinc-400 sm:flex">
-              {NAV_LINKS.map(([href, label]) => (
-                <a key={href} href={href} className="hover:text-white">
-                  {label}
-                </a>
-              ))}
-            </nav>
-          )}
         </div>
       </header>
 
@@ -67,7 +64,7 @@ export default function App() {
               Analyse ton clan <span className="text-accent-400">en un clic</span>
             </h1>
             <p className="mt-2 mb-6 text-sm text-zinc-300">
-              Guerre en cours, classements, fiches joueurs et membres inactifs.
+              Guerres, ligue, raids de capitale, classements et fiches joueurs.
             </p>
             <ClanSearch
               onSearch={load}
@@ -94,11 +91,41 @@ export default function App() {
               </p>
             )}
             <ClanHeader clan={clan} />
-            <StatCards members={clan.members} />
-            <WarPanel clanTag={clan.tag} onSelectPlayer={setPlayerTag} />
-            <Leaderboard clan={clan} onSelectPlayer={setPlayerTag} />
-            <InactiveMembers members={clan.members} onSelectPlayer={setPlayerTag} />
-            <MemberList members={clan.members} onSelectPlayer={setPlayerTag} />
+            <div role="tablist" aria-label="Sections du clan" className="flex gap-2 overflow-x-auto pb-1">
+              {TABS.map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  id={`tab-${key}`}
+                  aria-selected={tab === key}
+                  aria-controls="tab-panel"
+                  className="btn btn-quiet shrink-0"
+                  onClick={() => setTab(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div id="tab-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex flex-col gap-4">
+              {tab === 'apercu' && (
+                <>
+                  <StatCards members={clan.members} />
+                  <Leaderboard clan={clan} onSelectPlayer={setPlayerTag} />
+                  <InactiveMembers members={clan.members} onSelectPlayer={setPlayerTag} />
+                </>
+              )}
+              {tab === 'guerres' && (
+                <>
+                  <WarPanel clanTag={clan.tag} onSelectPlayer={setPlayerTag} />
+                  <LeaguePanel clanTag={clan.tag} onSelectPlayer={setPlayerTag} />
+                  <WarLog clanTag={clan.tag} />
+                </>
+              )}
+              {tab === 'capitale' && <RaidPanel clan={clan} onSelectPlayer={setPlayerTag} />}
+              {tab === 'membres' && <MemberList members={clan.members} onSelectPlayer={setPlayerTag} />}
+              {tab === 'comparer' && <CompareClans clan={clan} recent={recent} />}
+            </div>
           </main>
         )}
 

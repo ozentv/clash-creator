@@ -23,7 +23,21 @@ const ERROR_MESSAGES = {
   503: "L'API Clash of Clans est en maintenance.",
 };
 
+// Petit cache mémoire : évite de rappeler l'API à chaque changement d'onglet
+// et amortit les rafales (la ligue de clans demande jusqu'à 28 requêtes).
+const CACHE_TTL = 45_000;
+const cache = new Map();
+
 async function cocGet(path, token) {
+  const hit = cache.get(path);
+  if (hit && hit.expires > Date.now()) return hit.data;
+  const data = await cocFetch(path, token);
+  if (cache.size > 500) cache.clear();
+  cache.set(path, { data, expires: Date.now() + CACHE_TTL });
+  return data;
+}
+
+async function cocFetch(path, token) {
   let res;
   try {
     res = await fetch(BASE_URL + path, {
@@ -58,6 +72,13 @@ export const fetchClan = (tag, token) => cocGet(`/clans/${tagPath(tag)}`, token)
 export const fetchCurrentWar = (tag, token) => cocGet(`/clans/${tagPath(tag)}/currentwar`, token);
 export const searchClans = (name, token) =>
   cocGet(`/clans?name=${encodeURIComponent(name)}&limit=10`, token);
+export const fetchWarLog = (tag, token) => cocGet(`/clans/${tagPath(tag)}/warlog?limit=20`, token);
+export const fetchLeagueGroup = (tag, token) =>
+  cocGet(`/clans/${tagPath(tag)}/currentwar/leaguegroup`, token);
+export const fetchLeagueWar = (warTag, token) =>
+  cocGet(`/clanwarleagues/wars/${tagPath(warTag)}`, token);
+export const fetchRaidSeasons = (tag, token) =>
+  cocGet(`/clans/${tagPath(tag)}/capitalraidseasons?limit=1`, token);
 export const fetchPlayer = (tag, token) => cocGet(`/players/${tagPath(tag)}`, token);
 
 // Les fonctions to*Dto ne gardent que les champs utiles au front.
@@ -140,6 +161,98 @@ export function toWarDto(raw) {
           defenderPosition: opponentPosition.get(a.defenderTag) ?? null,
         })),
       })),
+  };
+}
+
+export function toWarLogDto(raw) {
+  return (raw.items ?? [])
+    .filter((w) => w.result && w.opponent?.name) // les entrées de ligue n'ont ni résultat ni adversaire
+    .map((w) => ({
+      result: w.result, // win | lose | tie
+      endTime: toIsoDate(w.endTime),
+      teamSize: w.teamSize,
+      stars: w.clan?.stars ?? 0,
+      destruction: w.clan?.destructionPercentage ?? 0,
+      opponentName: w.opponent.name,
+      opponentStars: w.opponent.stars ?? 0,
+      opponentDestruction: w.opponent.destructionPercentage ?? 0,
+    }));
+}
+
+export function toRaidDto(raw) {
+  const season = raw.items?.[0];
+  if (!season) return { state: 'none' };
+  return {
+    state: season.state, // ongoing | ended
+    startTime: toIsoDate(season.startTime),
+    endTime: toIsoDate(season.endTime),
+    totalLoot: season.capitalTotalLoot ?? 0,
+    raidsCompleted: season.raidsCompleted ?? 0,
+    totalAttacks: season.totalAttacks ?? 0,
+    districtsDestroyed: season.enemyDistrictsDestroyed ?? 0,
+    members: (season.members ?? [])
+      .map((m) => ({
+        tag: m.tag,
+        name: m.name,
+        attacks: m.attacks ?? 0,
+        attackLimit: (m.attackLimit ?? 0) + (m.bonusAttackLimit ?? 0),
+        loot: m.capitalResourcesLooted ?? 0,
+      }))
+      .sort((a, b) => b.loot - a.loot),
+  };
+}
+
+// Ligue de guerre de clans : agrège les manches du clan et les étoiles de ses membres.
+export async function loadLeague(tag, token) {
+  const group = await fetchLeagueGroup(tag, token);
+  const ourTag = '#' + tag;
+  const rounds = [];
+  const stats = new Map();
+
+  for (const [index, round] of (group.rounds ?? []).entries()) {
+    const warTags = (round.warTags ?? []).filter((t) => t && t !== '#0');
+    if (warTags.length === 0) continue;
+    const wars = await Promise.all(warTags.map((t) => fetchLeagueWar(t.replace('#', ''), token)));
+    const war = wars.find((w) => w.clan?.tag === ourTag || w.opponent?.tag === ourTag);
+    if (!war) continue;
+    const [us, them] = war.clan.tag === ourTag ? [war.clan, war.opponent] : [war.opponent, war.clan];
+
+    let result = null;
+    if (war.state === 'warEnded') {
+      const diff =
+        us.stars - them.stars || us.destructionPercentage - them.destructionPercentage;
+      result = diff > 0 ? 'win' : diff < 0 ? 'lose' : 'tie';
+    }
+    rounds.push({
+      round: index + 1,
+      state: war.state,
+      result,
+      opponentName: them.name,
+      stars: us.stars ?? 0,
+      destruction: us.destructionPercentage ?? 0,
+      opponentStars: them.stars ?? 0,
+      opponentDestruction: them.destructionPercentage ?? 0,
+    });
+
+    if (war.state === 'preparation') continue;
+    for (const m of us.members ?? []) {
+      const s = stats.get(m.tag) ?? { tag: m.tag, name: m.name, wars: 0, attacks: 0, stars: 0, destruction: 0 };
+      s.wars += 1;
+      for (const a of m.attacks ?? []) {
+        s.attacks += 1;
+        s.stars += a.stars;
+        s.destruction += a.destructionPercentage;
+      }
+      stats.set(m.tag, s);
+    }
+  }
+
+  return {
+    state: group.state, // preparation | inWar | ended
+    season: group.season ?? null,
+    clans: (group.clans ?? []).map((c) => ({ tag: c.tag, name: c.name })),
+    rounds,
+    members: [...stats.values()].sort((a, b) => b.stars - a.stars || b.destruction - a.destruction),
   };
 }
 

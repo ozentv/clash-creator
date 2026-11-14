@@ -24,3 +24,13 @@ export function formatDuration(ms) {
   const m = minutes % 60;
   return h > 0 ? `${h} h ${String(m).padStart(2, '0')}` : `${m} min`;
 }
+
+const df = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+export const formatDate = (iso) => (iso ? df.format(new Date(iso)) : '—');
+
+export const RESULT_LABELS = { win: 'Victoire', lose: 'Défaite', tie: 'Égalité' };
+export const RESULT_STYLES = {
+  win: 'bg-emerald-400/10 text-emerald-300',
+  lose: 'bg-red-400/10 text-red-300',
+  tie: 'bg-zinc-400/10 text-zinc-300',
+};

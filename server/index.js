@@ -7,14 +7,27 @@ import {
   fetchClan,
   fetchCurrentWar,
   fetchPlayer,
+  fetchWarLog,
+  fetchRaidSeasons,
+  loadLeague,
   searchClans,
   toClanDto,
   toWarDto,
   toPlayerDto,
+  toWarLogDto,
+  toRaidDto,
   toClanSummaryDto,
   CocApiError,
 } from './cocClient.js';
-import { buildDemoClan, buildDemoWar, buildDemoPlayer, buildDemoSearch } from './demoData.js';
+import {
+  buildDemoClan,
+  buildDemoWar,
+  buildDemoPlayer,
+  buildDemoSearch,
+  buildDemoWarLog,
+  buildDemoLeague,
+  buildDemoRaids,
+} from './demoData.js';
 
 const PORT = process.env.PORT ?? 3001;
 const TOKEN = process.env.COC_API_TOKEN?.trim();
@@ -79,6 +92,40 @@ app.get(
       throw err;
     }
   }),
+);
+
+app.get(
+  '/api/clan/:tag/warlog',
+  withTag(async (tag) => {
+    if (DEMO) return { private: false, wars: buildDemoWarLog() };
+    try {
+      return { private: false, wars: toWarLogDto(await fetchWarLog(tag, TOKEN)) };
+    } catch (err) {
+      if (err instanceof CocApiError && err.status === 403) return { private: true, wars: [] };
+      throw err;
+    }
+  }),
+);
+
+app.get(
+  '/api/clan/:tag/league',
+  withTag(async (tag) => {
+    if (DEMO) return { league: buildDemoLeague() };
+    try {
+      return { league: await loadLeague(tag, TOKEN) };
+    } catch (err) {
+      // 404 : le clan ne participe pas à la ligue ce mois-ci.
+      if (err instanceof CocApiError && err.status === 404) return { league: { state: 'none' } };
+      throw err;
+    }
+  }),
+);
+
+app.get(
+  '/api/clan/:tag/raids',
+  withTag(async (tag) => ({
+    raid: DEMO ? buildDemoRaids() : toRaidDto(await fetchRaidSeasons(tag, TOKEN)),
+  })),
 );
 
 app.get(

@@ -159,7 +159,7 @@ export default function WarPanel({ clanTag, onSelectPlayer }) {
   const { status, data: war, error } = useAsync(getWar, clanTag);
 
   return (
-    <section id="guerre" className="card overflow-hidden">
+    <section className="card overflow-hidden">
       <h3 className="section-label border-b border-white/10 p-4">
         <Swords className="size-4 text-accent-400" aria-hidden="true" />
         Guerre de clan

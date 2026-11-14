@@ -41,7 +41,7 @@ export default function Leaderboard({ clan, onSelectPlayer }) {
   }
 
   return (
-    <section id="classements" className="card overflow-hidden">
+    <section className="card overflow-hidden">
       <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-4">
         <h3 className="section-label mr-2">
           <Trophy className="size-4 text-accent-400" aria-hidden="true" />

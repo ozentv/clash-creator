@@ -7,7 +7,7 @@ export default function InactiveMembers({ members, onSelectPlayer }) {
   const inactive = useMemo(() => findInactiveMembers(members), [members]);
 
   return (
-    <section id="inactifs" className="card overflow-hidden">
+    <section className="card overflow-hidden">
       <div className="border-b border-white/10 p-4">
         <h3 className="section-label">
           <UserX className="size-4 text-accent-400" aria-hidden="true" />

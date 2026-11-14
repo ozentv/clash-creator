@@ -1,8 +1,8 @@
 # Clash Creator AI
 
-Analyse un clan Clash of Clans, trouvé par son nom ou son tag : guerre en cours, classements (trophées, dons, bilan dons,
-niveau, hôtel de ville) avec export PNG, fiche détaillée de chaque joueur, membres
-probablement inactifs et cartes de statistiques. Les clans consultés sont mémorisés dans le
+Analyse un clan Clash of Clans, trouvé par son nom ou son tag : guerre en cours, ligue de guerre de clans, historique des guerres, raids de la capitale,
+classements (trophées, dons, bilan dons, niveau, hôtel de ville) avec export PNG, fiche
+détaillée de chaque joueur, membres probablement inactifs et comparaison de deux clans. Les clans consultés sont mémorisés dans le
 navigateur et chaque clan a un lien partageable (`?clan=TAG`).
 
 ## Démarrage
@@ -42,7 +42,8 @@ refuse). Il faut donc passer par un proxy à IP fixe, par exemple celui de Royal
 
 ```
 server/               Proxy Express : garde le token secret et contourne l'absence de CORS
-  index.js            Routes HTTP (/api/clans/search, /api/clan/:tag, /api/clan/:tag/war, /api/player/:tag)
+  index.js            Routes HTTP (/api/clans/search, /api/clan/:tag et ses sous-routes
+                      /war, /warlog, /league, /raids, puis /api/player/:tag)
   cocClient.js        Appel à l'API officielle + mapping des erreurs
   demoData.js         Clan, guerre et joueurs fictifs du mode démo
 src/

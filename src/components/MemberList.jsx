@@ -10,7 +10,7 @@ export default function MemberList({ members, onSelectPlayer }) {
   }, [members, query]);
 
   return (
-    <section id="membres" className="card overflow-hidden">
+    <section className="card overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 p-4">
         <h3 className="section-label">
           <Users className="size-4 text-accent-400" aria-hidden="true" />

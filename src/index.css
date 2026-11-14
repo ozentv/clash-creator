@@ -10,11 +10,6 @@
   --color-accent-600: #c99a0a;
 }
 
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
-}
-
 body {
   @apply min-h-screen bg-ink-950 text-zinc-100 antialiased;
   background-image: radial-gradient(ellipse 45% 35% at 0% 0%, rgb(88 28 135 / 0.2), transparent);
@@ -39,7 +34,8 @@ body {
   .btn-quiet {
     @apply border border-white/10 bg-ink-800 text-zinc-300 hover:border-white/25 hover:text-white;
   }
-  .btn-quiet[aria-pressed='true'] {
+  .btn-quiet[aria-pressed='true'],
+  .btn-quiet[aria-selected='true'] {
     @apply border-accent-400/70 bg-accent-400/10 text-accent-400;
   }
 

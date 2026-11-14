@@ -28,6 +28,7 @@ function buildMembers() {
       expLevel: 90 + th * 9 + Math.floor(rand() * 30),
       townHallLevel: th,
       league: th >= 15 ? 'Legend League' : th >= 12 ? 'Titan League' : 'Champion League',
+      leagueIcon: null,
       trophies: Math.floor(1800 + th * 210 + rand() * 900) - (quiet ? 1500 : 0),
       donations: quiet ? 0 : Math.floor(rand() ** 2 * 4200),
       donationsReceived: quiet ? 0 : Math.floor(rand() * 2600),
@@ -59,7 +60,7 @@ export function buildDemoClan(tag) {
     capitalLeague: 'Master League II',
     builderBasePoints: 38650,
     language: 'Français',
-    labels: ['Clan Wars', 'Clan War League', 'Friendly'],
+    labels: ['Clan Wars', 'Clan War League', 'Friendly'].map((name) => ({ name, iconUrl: null })),
     members: buildMembers(),
   };
 }
@@ -151,7 +152,7 @@ export function buildDemoPlayer(tag) {
     attackWins: 40 + th * 3,
     defenseWins: 6,
     capitalContributions: member.donations * 40,
-    labels: ['Clan Wars', 'Active Donator', 'Veteran'],
+    labels: ['Clan Wars', 'Active Donator', 'Veteran'].map((name) => ({ name, iconUrl: null })),
     legend: legend
       ? {
           trophies: 1240,

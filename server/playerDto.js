@@ -1,3 +1,5 @@
+import { leagueIcon, toLabels } from './cocClient.js';
+
 // Conversion de la réponse /players/{tag} : l'API renvoie troupes, familiers, engins de siège
 // et super troupes dans une seule liste, qu'on répartit ici par catégorie.
 
@@ -49,6 +51,7 @@ export function toPlayerDto(raw) {
     townHallLevel: raw.townHallLevel ?? null,
     townHallWeaponLevel: raw.townHallWeaponLevel ?? null,
     league: raw.leagueTier?.name ?? raw.league?.name ?? null,
+    leagueIcon: leagueIcon(raw),
     trophies: raw.trophies ?? 0,
     bestTrophies: raw.bestTrophies ?? 0,
     warStars: raw.warStars ?? 0,
@@ -58,7 +61,7 @@ export function toPlayerDto(raw) {
     donations: raw.donations ?? 0,
     donationsReceived: raw.donationsReceived ?? 0,
     capitalContributions: raw.clanCapitalContributions ?? 0,
-    labels: (raw.labels ?? []).map((l) => l.name),
+    labels: toLabels(raw.labels),
     legend: raw.legendStatistics
       ? {
           trophies: raw.legendStatistics.legendTrophies ?? 0,

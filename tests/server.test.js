@@ -9,6 +9,8 @@ test('toClanDto tolère les champs absents', () => {
   assert.equal(clan.members[0].townHallLevel, null);
   assert.equal(clan.badgeUrl, null);
   assert.deepEqual(toClanDto({ tag: '#2PP', name: 'Vide' }).members, []);
+  const labelled = toClanDto({ tag: '#2PP', name: 'T', labels: [{ name: 'Clan Wars', iconUrls: { small: 'https://x/y.png' } }] });
+  assert.deepEqual(labelled.labels, [{ name: 'Clan Wars', iconUrl: 'https://x/y.png' }]);
 });
 
 test('toWarDto trie les membres et convertit les dates', () => {

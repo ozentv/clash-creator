@@ -83,6 +83,12 @@ export const fetchPlayer = (tag, token) => cocGet(`/players/${tagPath(tag)}`, to
 
 // Les fonctions to*Dto ne gardent que les champs utiles au front.
 
+// Images officielles fournies par l'API : ligues et étiquettes.
+export const leagueIcon = (raw) =>
+  raw.leagueTier?.iconUrls?.small ?? raw.league?.iconUrls?.small ?? raw.league?.iconUrls?.tiny ?? null;
+export const toLabels = (labels) =>
+  (labels ?? []).map((l) => ({ name: l.name, iconUrl: l.iconUrls?.small ?? null }));
+
 export function toClanDto(raw) {
   return {
     tag: raw.tag,
@@ -107,7 +113,7 @@ export function toClanDto(raw) {
     capitalLeague: raw.capitalLeague?.name ?? null,
     builderBasePoints: raw.clanBuilderBasePoints ?? null,
     language: raw.chatLanguage?.name ?? null,
-    labels: (raw.labels ?? []).map((l) => l.name),
+    labels: toLabels(raw.labels),
     members: (raw.memberList ?? []).map((m) => ({
       tag: m.tag,
       name: m.name,
@@ -115,6 +121,7 @@ export function toClanDto(raw) {
       expLevel: m.expLevel ?? 0,
       townHallLevel: m.townHallLevel ?? null,
       league: m.leagueTier?.name ?? m.league?.name ?? null,
+      leagueIcon: leagueIcon(m),
       trophies: m.trophies ?? 0,
       donations: m.donations ?? 0,
       donationsReceived: m.donationsReceived ?? 0,

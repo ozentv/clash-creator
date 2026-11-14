@@ -99,7 +99,12 @@ export default function MemberList({ members, onSelectPlayer }) {
                 <td className="px-4 py-2.5 text-zinc-400">{ROLE_LABELS[m.role] ?? m.role}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{m.townHallLevel ?? '—'}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">{m.expLevel}</td>
-                <td className="px-4 py-2.5 text-xs text-zinc-400">{m.league ?? '—'}</td>
+                <td className="px-4 py-2.5 text-xs text-zinc-400">
+                  <span className="flex items-center gap-1.5">
+                    {m.leagueIcon && <img src={m.leagueIcon} alt="" loading="lazy" className="size-6" />}
+                    {m.league ?? '—'}
+                  </span>
+                </td>
                 <td className="px-4 py-2.5 text-right font-medium text-white tabular-nums">
                   {formatNumber(m.trophies)}
                 </td>

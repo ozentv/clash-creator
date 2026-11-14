@@ -4,7 +4,8 @@ import { getPlayer } from '../api/clashApi.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { rankMembers } from '../lib/rankings.js';
 import { formatCompact, formatNumber, formatRank, ROLE_LABELS } from '../lib/format.js';
-import { CAREER_LABELS, unitName } from '../lib/names.js';
+import { CAREER_LABELS, labelName, unitName } from '../lib/names.js';
+import UnitIcon from './UnitIcon.jsx';
 
 const VIEWS = [
   ['profil', 'Profil'],
@@ -61,24 +62,27 @@ function Ring({ label, value }) {
   );
 }
 
-function UnitGrid({ units }) {
+function UnitGrid({ units, category }) {
   return (
-    <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5 sm:grid-cols-3">
+    <ul className="grid gap-x-5 gap-y-3 sm:grid-cols-2">
       {units.map((u) => {
         const maxed = u.level >= u.maxLevel;
         return (
-          <li key={u.name} className="min-w-0">
-            <div className="flex items-baseline justify-between gap-2 text-sm">
-              <span className="truncate text-zinc-200">{unitName(u.name)}</span>
-              <span className={`shrink-0 text-xs tabular-nums ${maxed ? 'font-semibold text-accent-400' : 'text-zinc-500'}`}>
-                {maxed ? 'max' : `${u.level}/${u.maxLevel}`}
-              </span>
-            </div>
-            <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/[0.07]">
-              <div
-                className={`bar-grow h-full rounded-full ${maxed ? 'bg-accent-400' : 'bg-zinc-400'}`}
-                style={{ width: `${Math.min(100, (u.level / u.maxLevel) * 100)}%` }}
-              />
+          <li key={u.name} className="flex min-w-0 items-center gap-2.5">
+            <UnitIcon name={u.name} category={category} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-2 text-sm">
+                <span className="truncate text-zinc-200">{unitName(u.name)}</span>
+                <span className={`shrink-0 text-xs tabular-nums ${maxed ? 'font-semibold text-accent-400' : 'text-zinc-500'}`}>
+                  {maxed ? 'max' : `${u.level}/${u.maxLevel}`}
+                </span>
+              </div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/[0.07]">
+                <div
+                  className={`bar-grow h-full rounded-full ${maxed ? 'bg-accent-400' : 'bg-zinc-400'}`}
+                  style={{ width: `${Math.min(100, (u.level / u.maxLevel) * 100)}%` }}
+                />
+              </div>
             </div>
           </li>
         );
@@ -177,13 +181,13 @@ function Profile({ player, ranks }) {
 
 function Army({ player }) {
   const groups = [
-    ['Héros', player.heroes],
-    ['Équipements de héros', player.equipment],
-    ['Familiers', player.pets],
-    ['Troupes', player.troops],
-    ['Sorts', player.spells],
-    ['Engins de siège', player.siegeMachines],
-    ['Héros de la base des ouvriers', player.builderBase?.heroes ?? []],
+    ['Héros', player.heroes, 'hero'],
+    ['Équipements de héros', player.equipment, 'equipment'],
+    ['Familiers', player.pets, 'pet'],
+    ['Troupes', player.troops, 'troop'],
+    ['Sorts', player.spells, 'spell'],
+    ['Engins de siège', player.siegeMachines, 'siege'],
+    ['Héros de la base des ouvriers', player.builderBase?.heroes ?? [], 'hero'],
   ].filter(([, units]) => units.length > 0);
 
   if (groups.length === 0) return <p className="py-6 text-center text-sm text-zinc-400">Aucune unité débloquée.</p>;
@@ -193,16 +197,19 @@ function Army({ player }) {
         <p className="mb-4 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
           Super troupes actives :
           {player.activeSuperTroops.map((name) => (
-            <span key={name} className="rounded-md bg-accent-400/10 px-2 py-0.5 font-semibold text-accent-400">
+            <span key={name} className="flex items-center gap-1.5 rounded-md bg-accent-400/10 py-0.5 pr-2 pl-0.5 font-semibold text-accent-400">
+              <span className="scale-75">
+                <UnitIcon name={name} category="hero" />
+              </span>
               {unitName(name)}
             </span>
           ))}
         </p>
       )}
-      {groups.map(([title, units]) => (
+      {groups.map(([title, units, category]) => (
         <div key={title} className="first:-mt-6">
           <Heading count={units.length}>{title}</Heading>
-          <UnitGrid units={units} />
+          <UnitGrid units={units} category={category} />
         </div>
       ))}
     </>
@@ -234,7 +241,6 @@ function PlayerSheet({ player, ranks }) {
   const [view, setView] = useState('profil');
   const chips = [
     ROLE_LABELS[player.role],
-    player.league,
     player.warPreference === 'in' && 'Partant pour la guerre',
     player.warPreference === 'out' && 'Pas dispo pour la guerre',
   ].filter(Boolean);
@@ -252,12 +258,29 @@ function PlayerSheet({ player, ranks }) {
             {player.clan.name}
           </span>
         )}
+        {player.league && (
+          <span className="flex items-center gap-1.5 rounded-md bg-white/[0.05] px-2.5 py-1 text-zinc-300">
+            {player.leagueIcon && <img src={player.leagueIcon} alt="" className="size-5" />}
+            {player.league}
+          </span>
+        )}
         {chips.map((chip) => (
           <span key={chip} className="rounded-md bg-white/[0.05] px-2.5 py-1 text-zinc-300">
             {chip}
           </span>
         ))}
       </p>
+
+      {player.labels.length > 0 && (
+        <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2 text-xs">
+          {player.labels.map((label) => (
+            <span key={label.name} className="flex items-center gap-1.5 rounded-md border border-white/[0.08] py-0.5 pr-2 pl-1 text-zinc-400">
+              {label.iconUrl && <img src={label.iconUrl} alt="" className="size-5" />}
+              {labelName(label.name)}
+            </span>
+          ))}
+        </p>
+      )}
 
       <div role="tablist" aria-label="Sections de la fiche" className="mb-5 flex gap-5 border-b border-white/[0.08]">
         {VIEWS.map(([key, label]) => (

@@ -1,6 +1,6 @@
 import { Info } from 'lucide-react';
 import { formatNumber } from '../lib/format.js';
-import { CLAN_TYPE_LABELS, WAR_FREQUENCY_LABELS } from '../lib/names.js';
+import { CLAN_TYPE_LABELS, labelName, WAR_FREQUENCY_LABELS } from '../lib/names.js';
 
 // Fiche d'identité du clan : conditions d'entrée, bilan de guerre, capitale.
 export default function ClanInfo({ clan }) {
@@ -33,6 +33,16 @@ export default function ClanInfo({ clan }) {
         <Info className="size-4 text-accent-400" aria-hidden="true" />
         Fiche du clan
       </h3>
+      {clan.labels.length > 0 && (
+        <ul className="flex flex-wrap gap-2 border-b border-white/[0.08] p-4">
+          {clan.labels.map((label) => (
+            <li key={label.name} className="flex items-center gap-1.5 rounded-md border border-white/[0.08] py-1 pr-2.5 pl-1.5 text-xs text-zinc-300">
+              {label.iconUrl && <img src={label.iconUrl} alt="" className="size-5" />}
+              {labelName(label.name)}
+            </li>
+          ))}
+        </ul>
+      )}
       <dl className="divide-y divide-white/5">
         {rows.map(([label, value]) => (
           <div key={label} className="row-hover flex items-baseline justify-between gap-4 px-4 py-2 text-sm">

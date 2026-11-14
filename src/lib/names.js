@@ -91,3 +91,26 @@ export const WAR_FREQUENCY_LABELS = {
   lessThanOncePerWeek: "Moins d'une fois par semaine",
   never: 'Jamais',
 };
+
+// Étiquettes de clan et de joueur (l'API les renvoie en anglais).
+const LABEL_NAMES = {
+  'Clan Wars': 'Guerres de clans',
+  'Clan War League': 'Ligue de clans',
+  'Trophy Pushing': 'Course aux trophées',
+  'Friendly Wars': 'Guerres amicales',
+  'Clan Games': 'Jeux de clan',
+  'Builder Base': 'Base des ouvriers',
+  'Base Designing': 'Création de villages',
+  'Clan Capital': 'Capitale de clan',
+  Donations: 'Dons',
+  Friendly: 'Amical',
+  Talkative: 'Bavard',
+  Relaxed: 'Détendu',
+  Competitive: 'Compétitif',
+  'Newbie Friendly': 'Débutants bienvenus',
+  'Active Donator': 'Donateur actif',
+  'Active Daily': 'Actif chaque jour',
+  Veteran: 'Vétéran',
+  Newbie: 'Débutant',
+};
+export const labelName = (name) => LABEL_NAMES[name] ?? name;

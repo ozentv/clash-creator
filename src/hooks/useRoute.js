@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { normalizeTag } from '../lib/tag.js';
 
 // Routeur minimal fondé sur l'adresse : ?clan=TAG&tab=guerres, ?joueur=TAG&vue=armee,
-// ?page=compositions. Le bouton « précédent » du navigateur fonctionne.
-export const CLAN_TABS = ['apercu', 'guerres', 'capitale', 'membres', 'comparer'];
-export const PLAYER_VIEWS = ['profil', 'armee', 'carriere', 'succes'];
-const PAGES = ['compositions', 'bases'];
+// ?page=compositions, ?page=classements&type=joueurs&pays=32000087. Le bouton « précédent » du navigateur fonctionne.
+export const CLAN_TABS = ['apercu', 'guerres', 'capitale', 'membres', 'evolution', 'comparer'];
+export const PLAYER_VIEWS = ['profil', 'armee', 'ameliorer', 'carriere', 'succes', 'comparer'];
+const PAGES = ['compositions', 'bases', 'classements'];
+const RANKING_KINDS = ['clans', 'joueurs'];
 
 const oneOf = (list, value) => (list.includes(value) ? value : list[0]);
 
@@ -20,6 +21,9 @@ function parse() {
     player,
     view: oneOf(PLAYER_VIEWS, params.get('vue')),
     library,
+    plan: params.get('plan') ?? '', // plan d'attaque de guerre (voir lib/warPlan.js)
+    rankingKind: oneOf(RANKING_KINDS, params.get('type')),
+    rankingLocation: /^(global|\d{6,10})$/.test(params.get('pays') ?? '') ? params.get('pays') : null,
     page: player ? 'player' : library ? library : clan ? 'clan' : 'home',
   };
 }
@@ -33,6 +37,11 @@ function toUrl(route) {
   set('joueur', route.player);
   if (route.player && route.view !== PLAYER_VIEWS[0]) set('vue', route.view);
   if (!route.player) set('page', route.library);
+  if (route.clan && !route.player && !route.library && route.tab === 'guerres') set('plan', route.plan);
+  if (!route.player && route.library === 'classements') {
+    if (route.rankingKind !== RANKING_KINDS[0]) set('type', route.rankingKind);
+    set('pays', route.rankingLocation);
+  }
   return url;
 }
 

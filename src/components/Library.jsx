@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
-import { BookOpen, Copy, ExternalLink, LayoutGrid, Lock, LockOpen, Plus, Swords, Trash2 } from 'lucide-react';
-import { addLibraryEntry, adminLogin, deleteLibraryEntry, getLibrary } from '../api/clashApi.js';
+import { BookOpen, Copy, ExternalLink, LayoutGrid, Lock, LockOpen, Plus, Swords, Trash2, Users } from 'lucide-react';
+import { addLibraryEntry, adminLogin, deleteLibraryEntry, getLibrary, getRoster } from '../api/clashApi.js';
+import { compositionUnits, whoCanPlay } from '../lib/army.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { safeLink } from '../lib/libraryRules.js';
 import { copyText, toast } from '../lib/toast.js';
@@ -82,7 +83,59 @@ function DeleteButton({ onDelete }) {
   );
 }
 
-function CompositionCard({ item, onDelete }) {
+// « Qui peut la jouer ? » : membres du clan ouvert qui ont l'hôtel de ville requis et toutes
+// les unités de la composition débloquées. L'effectif est chargé au premier clic.
+function WhoCanPlay({ item, clan, roster, onLoad }) {
+  if (compositionUnits(item).length === 0) {
+    return <p className="text-xs text-zinc-600">Ajoute la liste des troupes pour savoir qui peut la jouer.</p>;
+  }
+  if (roster.status === 'idle') {
+    return (
+      <button type="button" className="btn btn-quiet self-start px-3 py-1.5" onClick={onLoad}>
+        <Users className="size-4" aria-hidden="true" />
+        Qui peut la jouer dans {clan.name} ?
+      </button>
+    );
+  }
+  if (roster.status === 'loading') {
+    return (
+      <p role="status" className="text-xs text-zinc-400">
+        Lecture des niveaux de chaque membre…
+      </p>
+    );
+  }
+  if (roster.status === 'error') {
+    return (
+      <p role="alert" className="text-xs text-red-300">
+        {roster.error}
+      </p>
+    );
+  }
+  const players = whoCanPlay(item, roster.data);
+  return (
+    <div>
+      <p className="eyebrow mb-2">
+        Peuvent la jouer dans {clan.name} · {players.length} / {roster.data.length}
+      </p>
+      {players.length === 0 ? (
+        <p className="text-sm text-zinc-400">Aucun membre n'a l'hôtel de ville et toutes les unités nécessaires.</p>
+      ) : (
+        <ul className="flex flex-wrap gap-1.5">
+          {players.map((p) => (
+            <li key={p.tag} className="rounded-md border border-white/[0.08] px-2 py-0.5 text-xs text-zinc-200">
+              {p.name} <span className="text-zinc-500 tabular-nums">{p.readiness} %</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-2 text-[11px] text-zinc-600">
+        Le pourcentage est le niveau moyen des unités de la composition, par rapport au maximum du jeu.
+      </p>
+    </div>
+  );
+}
+
+function CompositionCard({ item, onDelete, clan, roster, onLoadRoster }) {
   return (
     <article className="card flex flex-col gap-4 p-5">
       <header>
@@ -97,6 +150,7 @@ function CompositionCard({ item, onDelete }) {
       <Units title="Sorts" units={item.sorts} category="spell" />
       {item.engin && <Units title="Engin de siège" units={[{ nom: item.engin }]} category="siege" />}
       {item.note && <p className="text-sm leading-relaxed text-zinc-400">{item.note}</p>}
+      {clan && <WhoCanPlay item={item} clan={clan} roster={roster} onLoad={onLoadRoster} />}
       <div className="mt-auto pt-1">
         <LinkButtons link={item.lien} openLabel="Copier l'armée dans le jeu" />
         {onDelete && <DeleteButton onDelete={onDelete} />}
@@ -242,7 +296,7 @@ function AdminBar({ password, onUnlock, onLock, onAdd, addLabel }) {
   );
 }
 
-export default function Library({ kind }) {
+export default function Library({ kind, clan }) {
   const { icon: Icon, title, intro, Card, empty, add, columns } = KINDS[kind];
   const [version, setVersion] = useState(0); // incrémenté pour recharger après un ajout ou une suppression
   const load = useCallback(() => getLibrary(), []);
@@ -250,6 +304,8 @@ export default function Library({ kind }) {
   const [hall, setHall] = useState(null); // null = tous les hôtels de ville
   const [password, setPassword] = useState(storedPassword);
   const [adding, setAdding] = useState(false);
+  const [rosterTag, setRosterTag] = useState(null); // défini au premier clic sur « Qui peut la jouer ? »
+  const roster = useAsync(getRoster, rosterTag);
 
   const items = data?.[kind] ?? [];
   const halls = [...new Set(items.map((i) => i.hdv))].sort((a, b) => b - a);
@@ -298,6 +354,11 @@ export default function Library({ kind }) {
             {title}
           </h1>
           <p className="mt-2 text-zinc-400">{intro}</p>
+          {kind === 'compositions' && !clan && (
+            <p className="mt-1 text-xs text-zinc-600">
+              Ouvre d'abord un clan pour voir quels membres peuvent jouer chaque composition.
+            </p>
+          )}
         </div>
         {data?.editable && (
           <AdminBar password={password} onUnlock={unlock} onLock={lock} onAdd={() => setAdding(true)} addLabel={add} />
@@ -354,6 +415,9 @@ export default function Library({ kind }) {
                 key={item.id}
                 item={item}
                 onDelete={password && item.source === 'site' ? () => remove(item.id) : null}
+                clan={clan}
+                roster={roster}
+                onLoadRoster={() => setRosterTag(clan.tag)}
               />
             ))}
           </div>

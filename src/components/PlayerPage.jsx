@@ -3,16 +3,20 @@ import {
   ArrowLeft,
   Award,
   Castle,
+  ChartLine,
   Gift,
+  GitCompareArrows,
   History,
   Link,
   Shield,
   Star,
   Swords,
+  TrendingUp,
   Trophy,
   User,
 } from 'lucide-react';
-import { getPlayer } from '../api/clashApi.js';
+import { getPlayer, getPlayerHistory } from '../api/clashApi.js';
+import { remainingUpgrades } from '../lib/army.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { rankMembers } from '../lib/rankings.js';
 import { formatCompact, formatNumber, formatRank, formatSigned, ROLE_LABELS } from '../lib/format.js';
@@ -20,6 +24,8 @@ import { ACHIEVEMENT_LABELS, CAREER_LABELS, labelName, leagueName, unitName } fr
 import { copyText } from '../lib/toast.js';
 import ExportButtons from './ExportButtons.jsx';
 import Freshness from './Freshness.jsx';
+import LineChart from './LineChart.jsx';
+import ComparePlayers from './ComparePlayers.jsx';
 import AnimatedNumber from './AnimatedNumber.jsx';
 import Tabs from './Tabs.jsx';
 import UnitIcon from './UnitIcon.jsx';
@@ -27,8 +33,10 @@ import UnitIcon from './UnitIcon.jsx';
 const VIEWS = [
   ['profil', 'Profil', User],
   ['armee', 'Armée', Swords],
+  ['ameliorer', 'À améliorer', TrendingUp],
   ['carriere', 'Carrière', History],
   ['succes', 'Succès', Award],
+  ['comparer', 'Comparer', GitCompareArrows],
 ];
 const VILLAGE_LABELS = { home: 'Village principal', builderBase: 'Base des ouvriers', clanCapital: 'Capitale de clan' };
 
@@ -125,6 +133,70 @@ function UnitGrid({ units, category }) {
         );
       })}
     </ul>
+  );
+}
+
+// Courbe des trophées, tirée des relevés quotidiens des clans suivis par le site.
+function PlayerHistory({ tag }) {
+  const { status, data } = useAsync(getPlayerHistory, tag);
+  if (status !== 'success' || !data.enabled) return null;
+  if (data.days.length < 2) {
+    return (
+      <p className="card flex items-center gap-2 p-4 text-sm text-zinc-400" data-story-skip>
+        <ChartLine className="size-4 shrink-0 text-zinc-600" aria-hidden="true" />
+        La courbe d'évolution apparaîtra après quelques jours de relevés du clan de ce joueur.
+      </p>
+    );
+  }
+  return (
+    <div data-story-skip>
+      <LineChart title="Évolution des trophées" points={data.days.map((d) => ({ day: d.day, value: d.trophies }))} />
+    </div>
+  );
+}
+
+// Unités qui ne sont pas au niveau maximum, de l'écart le plus grand au plus petit.
+function Upgrades({ player }) {
+  const { groups, levels, units } = remainingUpgrades(player);
+  if (units === 0) {
+    return <p className="card p-6 text-center text-sm text-zinc-300">Tout est au niveau maximum du jeu.</p>;
+  }
+  return (
+    <>
+      <p className="text-sm text-zinc-400">
+        <span className="font-semibold text-white">{formatNumber(levels)}</span> niveaux restants sur{' '}
+        <span className="font-semibold text-white">{units}</span> unités, par rapport aux niveaux maximum du jeu
+        (tous hôtels de ville confondus).
+      </p>
+      {groups.map((group) => (
+        <Panel
+          key={group.key}
+          title={group.label}
+          count={group.units.length ? `${group.units.length} / ${group.total} · ${group.levels} niveaux` : 'tout est au max'}
+        >
+          {group.units.length > 0 && (
+            <ul className="grid gap-x-6 gap-y-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              {group.units.map((u) => (
+                <li key={u.name} className="flex min-w-0 items-center gap-2.5">
+                  <UnitIcon name={u.name} category={group.category} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-2 text-sm">
+                      <span className="truncate text-zinc-200">{unitName(u.name)}</span>
+                      <span className="shrink-0 text-xs text-zinc-500 tabular-nums">
+                        {u.level}/{u.maxLevel}
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-accent-400 tabular-nums">
+                      {u.gap} niveau{u.gap > 1 ? 'x' : ''} à gagner
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      ))}
+    </>
   );
 }
 
@@ -472,7 +544,14 @@ export default function PlayerPage({ tag, view, onView, clan, onOpenClan, onBack
           <Tabs tabs={VIEWS} current={view} onChange={onView} label="Sections du joueur" idPrefix="vue" />
 
           <div key={view} id="vue-panel" role="tabpanel" aria-labelledby={`vue-${view}`} className="stagger flex flex-col gap-4">
-            {view === 'profil' && <Profile player={player} ranks={ranks} />}
+            {view === 'profil' && (
+              <>
+                <Profile player={player} ranks={ranks} />
+                <PlayerHistory tag={tag} />
+              </>
+            )}
+            {view === 'ameliorer' && <Upgrades player={player} />}
+            {view === 'comparer' && <ComparePlayers player={player} clan={clan} />}
             {view === 'armee' && <Army player={player} />}
             {view === 'carriere' && <Career player={player} />}
             {view === 'succes' && <Achievements player={player} />}

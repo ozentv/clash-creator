@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { LayoutGrid, ShieldCheck, Swords } from 'lucide-react';
+import { LayoutGrid, ShieldCheck, Swords, Trophy } from 'lucide-react';
 import { useClan } from './hooks/useClan.js';
 import { useRecentClans } from './hooks/useRecentClans.js';
 import { useRoute } from './hooks/useRoute.js';
@@ -13,9 +13,12 @@ import ClanView from './components/ClanView.jsx';
 import PlayerPage from './components/PlayerPage.jsx';
 import Library from './components/Library.jsx';
 import Toaster from './components/Toaster.jsx';
+import EventsBar from './components/EventsBar.jsx';
+import Rankings from './components/Rankings.jsx';
 
 const DEFAULT_TITLE = document.title;
 const NAV = [
+  ['classements', 'Classements', Trophy],
   ['compositions', 'Compositions', Swords],
   ['bases', 'Bases', LayoutGrid],
 ];
@@ -40,7 +43,12 @@ export default function App() {
   }, [clan, remember]);
 
   useEffect(() => {
-    const titles = { compositions: 'Compositions', bases: 'Bases', player: `Joueur #${route.player}` };
+    const titles = {
+      compositions: 'Compositions',
+      bases: 'Bases',
+      classements: 'Classements',
+      player: `Joueur #${route.player}`,
+    };
     const name = route.page === 'clan' ? clan?.name : titles[route.page];
     document.title = name ? `${name} · Clash Creator` : DEFAULT_TITLE;
   }, [route.page, route.player, clan]);
@@ -73,8 +81,23 @@ export default function App() {
         onBack={() => navigate({ player: null })}
       />
     );
+  } else if (route.page === 'classements') {
+    page = (
+      <Rankings
+        location={route.rankingLocation}
+        kind={route.rankingKind}
+        onChange={({ kind, location }) =>
+          navigate(
+            { rankingKind: kind ?? route.rankingKind, rankingLocation: location ?? route.rankingLocation },
+            { replace: true },
+          )
+        }
+        onOpenClan={openClan}
+        onOpenPlayer={openPlayer}
+      />
+    );
   } else if (route.page === 'compositions' || route.page === 'bases') {
-    page = <Library key={route.page} kind={route.page} />;
+    page = <Library key={route.page} kind={route.page} clan={clanReady ? clan : null} />;
   } else if (route.page === 'clan' && clan && !(clanError && !clanReady)) {
     page = (
       <ClanView
@@ -87,6 +110,8 @@ export default function App() {
         onRefresh={() => load(route.clan)}
         onSelectPlayer={openPlayer}
         recent={recent}
+        plan={route.plan}
+        onPlan={(plan) => navigate({ plan }, { replace: true })}
       />
     );
   } else if (route.page === 'clan' && loading) {
@@ -137,7 +162,7 @@ export default function App() {
                 }`}
               >
                 <Icon className="size-4" aria-hidden="true" />
-                <span className={onLanding ? '' : 'hidden sm:inline'}>{label}</span>
+                <span className="hidden sm:inline">{label}</span>
               </button>
             ))}
           </nav>
@@ -155,6 +180,7 @@ export default function App() {
           )}
         </div>
       </header>
+      <EventsBar />
 
       {page}
       <Toaster />

@@ -1,4 +1,4 @@
-import { GitCompareArrows, Landmark, LayoutDashboard, Swords, Users } from 'lucide-react';
+import { ChartLine, GitCompareArrows, Landmark, LayoutDashboard, Swords, Users } from 'lucide-react';
 import ClanHeader from './ClanHeader.jsx';
 import StatCards from './StatCards.jsx';
 import Composition from './Composition.jsx';
@@ -11,6 +11,8 @@ import LeaguePanel from './LeaguePanel.jsx';
 import WarLog from './WarLog.jsx';
 import RaidPanel from './RaidPanel.jsx';
 import CompareClans from './CompareClans.jsx';
+import HistoryTab from './HistoryTab.jsx';
+import WarPlan from './WarPlan.jsx';
 import Tabs from './Tabs.jsx';
 import DemoBanner from './DemoBanner.jsx';
 
@@ -19,10 +21,11 @@ export const TABS = [
   ['guerres', 'Guerres', Swords],
   ['capitale', 'Capitale', Landmark],
   ['membres', 'Membres', Users],
+  ['evolution', 'Évolution', ChartLine],
   ['comparer', 'Comparer', GitCompareArrows],
 ];
 
-export default function ClanView({ clan, demo, error, refreshing, tab, onTab, onRefresh, onSelectPlayer, recent }) {
+export default function ClanView({ clan, demo, error, refreshing, tab, onTab, onRefresh, onSelectPlayer, recent, plan, onPlan }) {
   return (
     <main className={`mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 transition-opacity ${refreshing ? 'opacity-60' : ''}`}>
       {error && (
@@ -59,12 +62,14 @@ export default function ClanView({ clan, demo, error, refreshing, tab, onTab, on
         {tab === 'guerres' && (
           <>
             <WarPanel clanTag={clan.tag} onSelectPlayer={onSelectPlayer} />
+            <WarPlan clanTag={clan.tag} plan={plan} onPlan={onPlan} />
             <LeaguePanel clanTag={clan.tag} onSelectPlayer={onSelectPlayer} />
             <WarLog clanTag={clan.tag} />
           </>
         )}
         {tab === 'capitale' && <RaidPanel clan={clan} onSelectPlayer={onSelectPlayer} />}
         {tab === 'membres' && <MemberList members={clan.members} onSelectPlayer={onSelectPlayer} />}
+        {tab === 'evolution' && <HistoryTab clanTag={clan.tag} onSelectPlayer={onSelectPlayer} />}
         {tab === 'comparer' && <CompareClans clan={clan} recent={recent} />}
       </div>
     </main>

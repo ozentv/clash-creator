@@ -49,3 +49,12 @@ export const adminLogin = (password) => admin('POST', '/api/admin/login', passwo
 export const addLibraryEntry = (kind, entry, password) => admin('POST', `/api/library/${kind}`, password, entry);
 export const deleteLibraryEntry = (id, password) =>
   admin('DELETE', `/api/library/${encodeURIComponent(id)}`, password);
+
+// ---------- Historique, effectif, classements ----------
+
+export const getClanHistory = (tag) => get(`/api/clan/${clean(tag)}/history`); // { enabled, days, movements }
+export const getPlayerHistory = (tag) => get(`/api/player/${clean(tag)}/history`); // { enabled, days }
+export const getRoster = (tag) => get(`/api/clan/${clean(tag)}/roster`).then((b) => b.roster);
+export const getLocations = () => get('/api/rankings/locations').then((b) => b.locations);
+export const getRanking = (location, kind) =>
+  get(`/api/rankings/${encodeURIComponent(location)}/${kind}`).then((b) => b.ranking);

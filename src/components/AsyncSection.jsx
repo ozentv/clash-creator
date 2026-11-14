@@ -2,7 +2,7 @@
 export default function AsyncSection({ icon: Icon, title, state, children }) {
   return (
     <section className="card overflow-hidden">
-      <h3 className="section-label border-b border-white/10 p-4">
+      <h3 className="section-label border-b border-white/[0.08] p-4">
         <Icon className="size-4 text-accent-400" aria-hidden="true" />
         {title}
       </h3>

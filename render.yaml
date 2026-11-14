@@ -6,7 +6,7 @@ services:
     plan: free
     buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: COC_API_TOKEN
         sync: false # à saisir dans le tableau de bord Render

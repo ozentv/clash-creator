@@ -94,7 +94,7 @@ export default function PlayerDialog({ tag, onClose }) {
       onClose={onClose}
       onClick={(e) => e.target === dialogRef.current && onClose()}
       aria-labelledby="player-dialog-title"
-      className="card m-auto max-h-[90vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto p-0 text-zinc-100 backdrop:bg-black/75"
+      className="card fixed m-auto max-h-[90vh] w-[calc(100%-2rem)] max-w-md overflow-y-auto p-0 text-zinc-100 backdrop:bg-black/75"
     >
       <div className="p-5">
         <div className="mb-3 flex items-start justify-between gap-3">

@@ -22,7 +22,7 @@ export default function LeaguePanel({ clanTag, onSelectPlayer }) {
         const totalStars = league.rounds.reduce((n, r) => n + r.stars, 0);
         return (
           <>
-            <p className="border-b border-white/10 p-4 text-sm text-zinc-300">
+            <p className="border-b border-white/[0.08] p-4 text-sm text-zinc-300">
               Saison {league.season ?? '—'} · {league.clans.length} clans dans le groupe ·{' '}
               <span className="font-semibold text-white">{totalStars} étoiles</span> gagnées
             </p>

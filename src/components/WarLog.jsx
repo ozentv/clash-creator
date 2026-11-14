@@ -34,7 +34,7 @@ export default function WarLog({ clanTag }) {
         const s = summarize(wars);
         return (
           <>
-            <p className="border-b border-white/10 p-4 text-sm text-zinc-300">
+            <p className="border-b border-white/[0.08] p-4 text-sm text-zinc-300">
               Sur les {wars.length} dernières guerres :{' '}
               <span className="font-semibold text-emerald-300">{s.wins} victoires</span>,{' '}
               <span className="font-semibold text-red-300">{s.losses} défaites</span>

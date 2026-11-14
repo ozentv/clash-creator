@@ -1,13 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 import { getClan } from '../api/clashApi.js';
 
+const EMPTY = { status: 'idle', clan: null, demo: false, error: null };
+
 export function useClan() {
-  const [state, setState] = useState({
-    status: 'idle',
-    clan: null,
-    demo: false,
-    error: null,
-  });
+  const [state, setState] = useState(EMPTY);
   const requestId = useRef(0);
 
   const load = useCallback(async (tag) => {
@@ -17,10 +14,15 @@ export function useClan() {
       const { clan, demo } = await getClan(tag);
       if (id === requestId.current) setState({ status: 'success', clan, demo, error: null });
     } catch (err) {
-      if (id === requestId.current)
-        setState({ status: 'error', clan: null, demo: false, error: err.message });
+      // On garde le clan déjà affiché : l'erreur concerne la nouvelle recherche.
+      if (id === requestId.current) setState((s) => ({ ...s, status: 'error', error: err.message }));
     }
   }, []);
 
-  return { ...state, load };
+  const reset = useCallback(() => {
+    requestId.current += 1;
+    setState(EMPTY);
+  }, []);
+
+  return { ...state, load, reset };
 }

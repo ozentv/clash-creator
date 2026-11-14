@@ -42,7 +42,7 @@ export default function Leaderboard({ clan, onSelectPlayer }) {
 
   return (
     <section className="card overflow-hidden">
-      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-4">
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] p-4">
         <h3 className="section-label mr-2">
           <Trophy className="size-4 text-accent-400" aria-hidden="true" />
           Classements
@@ -97,7 +97,7 @@ export default function Leaderboard({ clan, onSelectPlayer }) {
               {ranking.hint && ` · ${ranking.hint}`}
             </p>
           </div>
-          <p className="shrink-0 font-display text-sm text-zinc-500">Clash Creator</p>
+          <p className="shrink-0 font-mono text-[11px] tracking-widest text-zinc-600 uppercase">Clash Creator</p>
         </div>
         <ol className="divide-y divide-white/5 rounded-lg border border-white/10">
           {rows.map((m) => (

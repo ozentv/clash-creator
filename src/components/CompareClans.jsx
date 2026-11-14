@@ -58,7 +58,7 @@ export default function CompareClans({ clan, recent }) {
 
   return (
     <section className="card overflow-hidden">
-      <div className="border-b border-white/10 p-4">
+      <div className="border-b border-white/[0.08] p-4">
         <h3 className="section-label mb-3">
           <GitCompareArrows className="size-4 text-accent-400" aria-hidden="true" />
           Comparer avec un autre clan
@@ -116,8 +116,8 @@ export default function CompareClans({ clan, recent }) {
             <thead>
               <tr className="text-left">
                 <th className="px-4 py-3 text-xs font-medium text-zinc-500">Le meilleur chiffre est en jaune</th>
-                <th className="px-4 py-3 text-right font-display text-base font-normal text-white">{clan.name}</th>
-                <th className="px-4 py-3 text-right font-display text-base font-normal text-white">{other.name}</th>
+                <th className="px-4 py-3 text-right font-display text-base text-white">{clan.name}</th>
+                <th className="px-4 py-3 text-right font-display text-base text-white">{other.name}</th>
               </tr>
             </thead>
             <tbody>

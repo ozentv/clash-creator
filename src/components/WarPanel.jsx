@@ -78,7 +78,7 @@ function WarContent({ war, onSelectPlayer }) {
 
   return (
     <>
-      <div className="border-b border-white/10 p-4">
+      <div className="border-b border-white/[0.08] p-4">
         <p className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-zinc-400">
           <span className="flex items-center gap-1.5 rounded-md bg-accent-400/10 px-2 py-0.5 font-semibold text-accent-400">
             {war.state === 'inWar' && (
@@ -119,7 +119,7 @@ function WarContent({ war, onSelectPlayer }) {
       </div>
 
       {fighting && (
-        <div className="border-b border-white/10 p-4">
+        <div className="border-b border-white/[0.08] p-4">
           <h4 className="mb-2 text-sm font-semibold text-white">
             {war.state === 'inWar' ? 'Attaques restantes' : 'Attaques non utilisées'}
             <span className="ml-2 text-zinc-500">{pending.reduce((n, m) => n + m.left, 0)}</span>
@@ -178,7 +178,7 @@ export default function WarPanel({ clanTag, onSelectPlayer }) {
 
   return (
     <section className="card overflow-hidden">
-      <h3 className="section-label border-b border-white/10 p-4">
+      <h3 className="section-label border-b border-white/[0.08] p-4">
         <Swords className="size-4 text-accent-400" aria-hidden="true" />
         Guerre de clan
       </h3>

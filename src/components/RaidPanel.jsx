@@ -26,7 +26,7 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
         const absent = clan.members.filter((m) => !raiders.has(m.tag));
         return (
           <>
-            <p className="border-b border-white/10 p-4 text-sm text-zinc-300">
+            <p className="border-b border-white/[0.08] p-4 text-sm text-zinc-300">
               <span className="mr-2 rounded-md bg-accent-400/10 px-2 py-0.5 text-xs font-semibold text-accent-400">
                 {raid.state === 'ongoing' ? 'Week-end en cours' : 'Dernier week-end'}
               </span>
@@ -40,7 +40,7 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
             </dl>
 
             {absent.length > 0 && (
-              <div className="border-b border-white/10 p-4">
+              <div className="border-b border-white/[0.08] p-4">
                 <h4 className="mb-2 text-sm font-semibold text-white">
                   Membres actuels sans attaque
                   <span className="ml-2 text-zinc-500">{absent.length}</span>

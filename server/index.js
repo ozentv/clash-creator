@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import compression from 'compression';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
@@ -35,6 +36,39 @@ const DEMO = !TOKEN;
 const TAG_PATTERN = /^[0289PYLQGRJCUV]{3,12}$/;
 
 const app = express();
+app.set('trust proxy', 1); // derrière le proxy de l'hébergeur : req.ip = adresse du visiteur
+app.disable('x-powered-by');
+app.use(compression());
+
+// En-têtes de sécurité.
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Content-Security-Policy':
+      "default-src 'self'; img-src 'self' data: blob: https://api-assets.clashofclans.com; " +
+      "style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'",
+  });
+  next();
+});
+
+// Limite de débit par adresse IP sur l'API, pour protéger le quota de la clé Clash of Clans.
+const RATE_LIMIT = Number(process.env.RATE_LIMIT_PER_MINUTE) || 120;
+const hits = new Map();
+setInterval(() => hits.clear(), 60_000).unref();
+app.use('/api', (req, res, next) => {
+  const count = (hits.get(req.ip) ?? 0) + 1;
+  hits.set(req.ip, count);
+  if (count > RATE_LIMIT) {
+    return res.status(429).json({ error: 'Trop de requêtes. Réessaie dans une minute.' });
+  }
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
+app.get('/api/health', (req, res) => res.json({ ok: true, demo: DEMO }));
 
 // Valide le tag, exécute le handler et traduit les erreurs en réponses JSON.
 const withTag = (handler) => async (req, res) => {
@@ -141,8 +175,11 @@ app.get(
 // En production, le même serveur sert le front compilé (npm run build).
 const dist = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
 if (fs.existsSync(dist)) {
-  app.use(express.static(dist));
-  app.use((req, res) => res.sendFile(path.join(dist, 'index.html')));
+  // Les fichiers de /assets ont un nom unique par version : cache long.
+  app.use('/assets', express.static(path.join(dist, 'assets'), { immutable: true, maxAge: '1y' }));
+  app.use(express.static(dist, { maxAge: '1h' }));
+  app.use('/api', (req, res) => res.status(404).json({ error: 'Route inconnue.' }));
+  app.use((req, res) => res.set('Cache-Control', 'no-cache').sendFile(path.join(dist, 'index.html')));
 }
 
 app.listen(PORT, () => {

@@ -1,9 +1,16 @@
-# Clash Creator AI
+# Clash Creator
 
-Analyse un clan Clash of Clans, trouvé par son nom ou son tag : guerre en cours, ligue de guerre de clans, historique des guerres, raids de la capitale,
-classements (trophées, dons, bilan dons, niveau, hôtel de ville) avec export PNG, fiche
-détaillée de chaque joueur, membres probablement inactifs et comparaison de deux clans. Les clans consultés sont mémorisés dans le
-navigateur et chaque clan a un lien partageable (`?clan=TAG`).
+Analyse un clan Clash of Clans à partir de son nom ou de son tag.
+
+- **Aperçu** : chiffres clés, cinq classements exportables en PNG (trophées, dons, bilan des dons,
+  niveau, hôtel de ville), composition du clan et membres probablement inactifs.
+- **Guerres** : guerre en cours, ligue de guerre de clans, historique des guerres.
+- **Capitale** : week-end de raid, attaques et or pillé par membre.
+- **Membres** : tableau triable et filtrable, fiche détaillée de chaque joueur.
+- **Comparer** : deux clans côte à côte.
+
+Chaque clan a un lien partageable (`?clan=TAG&tab=guerres`) et les clans consultés sont mémorisés
+dans le navigateur.
 
 ## Démarrage
 
@@ -13,7 +20,11 @@ cp .env.example .env   # puis renseigne COC_API_TOKEN
 npm run dev            # front : http://localhost:5173 — API : http://localhost:3001
 ```
 
-Sans `COC_API_TOKEN`, l'application tourne en **mode démo** avec un clan fictif.
+Sans `COC_API_TOKEN`, l'application tourne en **mode démo** avec des données fictives.
+
+```bash
+npm test               # tests unitaires (logique et conversion des réponses de l'API)
+```
 
 ### Obtenir un token
 
@@ -42,13 +53,29 @@ refuse). Il faut donc passer par un proxy à IP fixe, par exemple celui de Royal
 
 ```
 server/               Proxy Express : garde le token secret et contourne l'absence de CORS
-  index.js            Routes HTTP (/api/clans/search, /api/clan/:tag et ses sous-routes
-                      /war, /warlog, /league, /raids, puis /api/player/:tag)
-  cocClient.js        Appel à l'API officielle + mapping des erreurs
-  demoData.js         Clan, guerre et joueurs fictifs du mode démo
+  index.js            Routes /api, en-têtes de sécurité, limite de débit, fichiers statiques
+  cocClient.js        Appels à l'API officielle (avec cache), erreurs, conversion des réponses
+  demoData.js         Données fictives du mode démo
 src/
   api/clashApi.js     Appels du front vers le proxy
-  hooks/              useClan (clan courant), useAsync (guerre, fiche joueur)
-  lib/                Logique pure (tag, classements, stats, inactifs, export PNG)
-  components/         Composants React (recherche, en-tête, stats, guerre, classement, inactifs, fiche joueur, membres)
+  hooks/              useClan, useAsync, useRecentClans, useReveal, useSpotlight
+  lib/                Logique pure : tag, classements, statistiques, formats, export PNG
+  components/         Landing (accueil), ClanView (tableau de bord et onglets), panneaux, fiche joueur
+tests/                Tests node:test de lib/ et de server/
 ```
+
+## Routes de l'API
+
+| Route | Contenu |
+| --- | --- |
+| `GET /api/health` | État du serveur |
+| `GET /api/clans/search?name=` | Recherche de clans par nom |
+| `GET /api/clan/:tag` | Clan et membres |
+| `GET /api/clan/:tag/war` | Guerre en cours |
+| `GET /api/clan/:tag/warlog` | Historique des guerres |
+| `GET /api/clan/:tag/league` | Ligue de guerre de clans |
+| `GET /api/clan/:tag/raids` | Dernier week-end de raid |
+| `GET /api/player/:tag` | Fiche joueur |
+
+Ce contenu n'est pas affilié à, approuvé, sponsorisé ou spécifiquement validé par Supercell,
+et Supercell n'en est pas responsable.

@@ -1,158 +1,135 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { useClan } from './hooks/useClan.js';
 import { useRecentClans } from './hooks/useRecentClans.js';
+import { useSpotlight } from './hooks/useSpotlight.js';
 import { normalizeTag } from './lib/tag.js';
-import { Swords } from 'lucide-react';
 import Backdrop from './components/Backdrop.jsx';
-import HeroArt from './components/HeroArt.jsx';
 import ClanSearch from './components/ClanSearch.jsx';
-import ClanHeader from './components/ClanHeader.jsx';
-import StatCards from './components/StatCards.jsx';
-import Leaderboard from './components/Leaderboard.jsx';
-import MemberList from './components/MemberList.jsx';
-import WarPanel from './components/WarPanel.jsx';
-import InactiveMembers from './components/InactiveMembers.jsx';
+import Landing from './components/Landing.jsx';
+import ClanSkeleton from './components/ClanSkeleton.jsx';
+import ClanView, { TABS } from './components/ClanView.jsx';
 import PlayerDialog from './components/PlayerDialog.jsx';
-import WarLog from './components/WarLog.jsx';
-import LeaguePanel from './components/LeaguePanel.jsx';
-import RaidPanel from './components/RaidPanel.jsx';
-import CompareClans from './components/CompareClans.jsx';
 
-const TABS = [
-  ['apercu', 'Aperçu'],
-  ['guerres', 'Guerres'],
-  ['capitale', 'Capitale'],
-  ['membres', 'Membres'],
-  ['comparer', 'Comparer'],
-];
+const DEFAULT_TITLE = document.title;
+const isTab = (key) => TABS.some(([k]) => k === key);
+
+// L'adresse reflète le clan et l'onglet affichés : ?clan=TAG&tab=guerres
+function readUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  return { tag: normalizeTag(params.get('clan') ?? ''), tab: isTab(tab) ? tab : 'apercu' };
+}
+
+function writeUrl(clan, tab) {
+  const url = new URL(window.location.href);
+  url.search = '';
+  if (clan) {
+    url.searchParams.set('clan', clan.tag.replace('#', ''));
+    if (tab !== 'apercu') url.searchParams.set('tab', tab);
+  }
+  window.history.replaceState(null, '', url);
+}
 
 export default function App() {
-  const { status, clan, demo, error, load } = useClan();
-  const [playerTag, setPlayerTag] = useState(null);
-  const [tab, setTab] = useState('apercu');
+  const { status, clan, demo, error, load, reset } = useClan();
   const { recent, remember, forget } = useRecentClans();
+  const [tab, setTab] = useState(() => readUrl().tab);
+  const [playerTag, setPlayerTag] = useState(null);
+  useSpotlight();
 
-  // Lien partageable : ?clan=TAG ouvre directement le clan.
   useEffect(() => {
-    const tag = normalizeTag(new URLSearchParams(window.location.search).get('clan') ?? '');
+    const { tag } = readUrl();
     if (tag) load(tag);
   }, [load]);
 
   useEffect(() => {
-    if (!clan) return;
-    remember(clan);
-    const url = new URL(window.location.href);
-    url.searchParams.set('clan', clan.tag.replace('#', ''));
-    window.history.replaceState(null, '', url);
-    document.title = `${clan.name} · Clash Creator`;
+    if (clan) remember(clan);
   }, [clan, remember]);
+
+  useEffect(() => {
+    writeUrl(clan, tab);
+    document.title = clan ? `${clan.name} · Clash Creator` : DEFAULT_TITLE;
+  }, [clan, tab]);
+
+  const goHome = useCallback(() => {
+    reset();
+    setTab('apercu');
+    window.scrollTo({ top: 0 });
+  }, [reset]);
+
+  const search = useCallback(
+    (tag) => {
+      window.scrollTo({ top: 0 });
+      load(tag);
+    },
+    [load],
+  );
+
+  const loading = status === 'loading';
 
   return (
     <>
       <Backdrop />
-      <header className="sticky top-0 z-10 border-b border-white/10 bg-ink-950/85 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center px-4">
-          <a href="#" className="group flex items-center gap-2 font-display text-xl text-white">
-            <Swords
-              className="size-5 text-accent-400 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
+      <header className="sticky top-0 z-20 border-b border-white/[0.08] bg-ink-950/75 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
+          <button
+            type="button"
+            onClick={goHome}
+            aria-label="Clash Creator, retour à l'accueil"
+            className="group flex shrink-0 cursor-pointer items-center gap-2 font-display text-lg text-white"
+          >
+            <ShieldCheck
+              className="size-6 text-accent-400 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
               aria-hidden="true"
             />
-            <span>
+            <span className={clan ? 'hidden sm:inline' : ''}>
               Clash<span className="text-accent-400">Creator</span>
             </span>
-          </a>
+          </button>
+          {clan && (
+            <ClanSearch onSearch={search} loading={loading} currentTag={clan.tag} variant="compact" hotkey />
+          )}
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6">
-        <div className="hero-frame">
-        <section className="relative overflow-hidden rounded-2xl">
-          <HeroArt />
-          <div className="absolute inset-0 bg-gradient-to-b from-ink-950/25 via-ink-950/40 to-ink-950/85" />
-          <div className={`relative px-4 text-center ${clan ? 'py-10' : 'py-16 sm:py-24'}`}>
-            <h1 className="font-display text-3xl text-white sm:text-5xl">
-              Analyse ton clan <span className="text-shine">en un clic</span>
-            </h1>
-            <p className="mt-2 mb-6 text-sm text-zinc-300">
-              Guerres, ligue, raids de capitale, classements et fiches joueurs.
-            </p>
-            <ClanSearch
-              onSearch={load}
-              loading={status === 'loading'}
-              recent={recent}
-              onForget={forget}
-              currentTag={clan?.tag ?? null}
-            />
-          </div>
-        </section>
-        </div>
+      {clan ? (
+        <ClanView
+          clan={clan}
+          demo={demo}
+          error={status === 'error' ? error : null}
+          refreshing={loading}
+          tab={tab}
+          onTab={setTab}
+          onRefresh={() => load(normalizeTag(clan.tag))}
+          onSelectPlayer={setPlayerTag}
+          recent={recent}
+        />
+      ) : loading ? (
+        <ClanSkeleton />
+      ) : (
+        <Landing
+          onSearch={search}
+          loading={loading}
+          error={status === 'error' ? error : null}
+          recent={recent}
+          onForget={forget}
+        />
+      )}
 
-        {status === 'error' && (
-          <p role="alert" className="card border-red-400/40 px-4 py-3 text-center text-sm text-red-200">
-            {error}
+      <PlayerDialog tag={playerTag} onClose={() => setPlayerTag(null)} />
+
+      <footer className="border-t border-white/[0.08]">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
+          <p className="font-display text-sm text-zinc-400">
+            Clash<span className="text-accent-400">Creator</span>
           </p>
-        )}
-
-        {clan && (
-          <main className={`flex flex-col gap-4 ${status === 'loading' ? 'opacity-50' : ''}`}>
-            {demo && (
-              <p className="rounded-lg border border-accent-400/30 bg-accent-400/5 px-4 py-2 text-center text-xs text-accent-400">
-                Mode démo : données fictives. Ajoute <code>COC_API_TOKEN</code> dans{' '}
-                <code>.env</code> pour charger de vrais clans.
-              </p>
-            )}
-            <ClanHeader clan={clan} />
-            <div role="tablist" aria-label="Sections du clan" className="flex gap-2 overflow-x-auto pb-1">
-              {TABS.map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  role="tab"
-                  id={`tab-${key}`}
-                  aria-selected={tab === key}
-                  aria-controls="tab-panel"
-                  className="btn btn-quiet shrink-0"
-                  onClick={() => setTab(key)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div
-              key={`${clan.tag}-${tab}`}
-              id="tab-panel"
-              role="tabpanel"
-              aria-labelledby={`tab-${tab}`}
-              className="stagger flex flex-col gap-4"
-            >
-              {tab === 'apercu' && (
-                <>
-                  <StatCards members={clan.members} />
-                  <Leaderboard clan={clan} onSelectPlayer={setPlayerTag} />
-                  <InactiveMembers members={clan.members} onSelectPlayer={setPlayerTag} />
-                </>
-              )}
-              {tab === 'guerres' && (
-                <>
-                  <WarPanel clanTag={clan.tag} onSelectPlayer={setPlayerTag} />
-                  <LeaguePanel clanTag={clan.tag} onSelectPlayer={setPlayerTag} />
-                  <WarLog clanTag={clan.tag} />
-                </>
-              )}
-              {tab === 'capitale' && <RaidPanel clan={clan} onSelectPlayer={setPlayerTag} />}
-              {tab === 'membres' && <MemberList members={clan.members} onSelectPlayer={setPlayerTag} />}
-              {tab === 'comparer' && <CompareClans clan={clan} recent={recent} />}
-            </div>
-          </main>
-        )}
-
-        <PlayerDialog tag={playerTag} onClose={() => setPlayerTag(null)} />
-
-        <footer className="pt-4 pb-2 text-center text-xs text-zinc-600">
-          Ce contenu n'est pas affilié à, approuvé, sponsorisé ou spécifiquement validé par
-          Supercell, et Supercell n'en est pas responsable.
-        </footer>
-      </div>
+          <p className="max-w-2xl sm:text-right">
+            Ce contenu n'est pas affilié à, approuvé, sponsorisé ou spécifiquement validé par
+            Supercell, et Supercell n'en est pas responsable.
+          </p>
+        </div>
+      </footer>
     </>
   );
 }

@@ -8,7 +8,7 @@ export default function InactiveMembers({ members, onSelectPlayer }) {
 
   return (
     <section className="card overflow-hidden">
-      <div className="border-b border-white/10 p-4">
+      <div className="border-b border-white/[0.08] p-4">
         <h3 className="section-label">
           <UserX className="size-4 text-accent-400" aria-hidden="true" />
           Membres à surveiller

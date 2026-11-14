@@ -9,7 +9,8 @@ Analyse un clan Clash of Clans à partir de son nom ou de son tag.
 - **Membres** : tableau triable et filtrable, fiche détaillée de chaque joueur.
 - **Comparer** : deux clans côte à côte.
 
-Chaque clan a un lien partageable (`?clan=TAG&tab=guerres`) et les clans consultés sont mémorisés
+Un joueur se cherche aussi directement par son tag. Chaque clan et chaque fiche joueur a un lien
+partageable (`?clan=TAG&tab=guerres&joueur=TAG`) et les clans consultés sont mémorisés
 dans le navigateur.
 
 ## Démarrage

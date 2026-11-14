@@ -237,7 +237,7 @@ function Career({ player }) {
   );
 }
 
-function PlayerSheet({ player, ranks }) {
+function PlayerSheet({ player, ranks, currentClanTag, onOpenClan }) {
   const [view, setView] = useState('profil');
   const chips = [
     ROLE_LABELS[player.role],
@@ -248,16 +248,32 @@ function PlayerSheet({ player, ranks }) {
   return (
     <>
       <p className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-        {player.clan && (
-          <span className="flex items-center gap-1.5 rounded-md bg-white/[0.05] py-1 pr-2.5 pl-1.5 text-zinc-200">
-            {player.clan.badgeUrl ? (
+        {player.clan &&
+          (() => {
+            const badge = player.clan.badgeUrl ? (
               <img src={player.clan.badgeUrl} alt="" className="size-5" />
             ) : (
               <Shield className="size-4 text-zinc-500" aria-hidden="true" />
-            )}
-            {player.clan.name}
-          </span>
-        )}
+            );
+            const style = 'flex items-center gap-1.5 rounded-md bg-white/[0.05] py-1 pr-2.5 pl-1.5 text-zinc-200';
+            // Joueur d'un autre clan que celui affiché : le clan devient un lien.
+            return player.clan.tag === currentClanTag ? (
+              <span className={style}>
+                {badge}
+                {player.clan.name}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onOpenClan(player.clan.tag)}
+                className={`${style} cursor-pointer ring-1 ring-accent-400/40 hover:bg-accent-400/10 hover:text-accent-400`}
+              >
+                {badge}
+                Voir le clan {player.clan.name}
+              </button>
+            );
+          })()}
+        {!player.clan && <span className="rounded-md bg-white/[0.05] px-2.5 py-1 text-zinc-400">Sans clan</span>}
         {player.league && (
           <span className="flex items-center gap-1.5 rounded-md bg-white/[0.05] px-2.5 py-1 text-zinc-300">
             {player.leagueIcon && <img src={player.leagueIcon} alt="" className="size-5" />}
@@ -306,7 +322,7 @@ function PlayerSheet({ player, ranks }) {
   );
 }
 
-export default function PlayerDialog({ tag, onClose, members }) {
+export default function PlayerDialog({ tag, onClose, members, currentClanTag, onOpenClan }) {
   const dialogRef = useRef(null);
   const { status, data: player, error } = useAsync(getPlayer, tag);
 
@@ -362,7 +378,13 @@ export default function PlayerDialog({ tag, onClose, members }) {
         )}
         {status === 'success' && (
           <div className="rise">
-            <PlayerSheet key={player.tag} player={player} ranks={ranks} />
+            <PlayerSheet
+              key={player.tag}
+              player={player}
+              ranks={ranks}
+              currentClanTag={currentClanTag}
+              onOpenClan={onOpenClan}
+            />
           </div>
         )}
       </div>

@@ -25,12 +25,12 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  [Search, 'Cherche ton clan', 'Par son nom ou par son tag, visible sur le profil du clan dans le jeu.'],
+  [Search, 'Cherche', 'Un clan par son nom ou son tag, ou directement un joueur par son tag.'],
   [History, 'Explore', "Cinq onglets : aperçu, guerres, capitale, membres et comparaison."],
   [LinkIcon, 'Partage', 'Un lien direct vers ton clan, ou un classement exporté en image.'],
 ];
 
-export default function Landing({ onSearch, loading, error, recent, onForget }) {
+export default function Landing({ onSearch, onPlayer, loading, error, recent, onForget }) {
   const ref = useReveal();
 
   return (
@@ -54,7 +54,7 @@ export default function Landing({ onSearch, loading, error, recent, onForget }) 
         </p>
 
         <div className="rise mt-10 w-full [animation-delay:240ms]">
-          <ClanSearch onSearch={onSearch} loading={loading} currentTag={null} variant="hero" hotkey />
+          <ClanSearch onSearch={onSearch} onPlayer={onPlayer} loading={loading} currentTag={null} variant="hero" hotkey />
           {error && (
             <p role="alert" className="mx-auto mt-4 max-w-2xl rounded-lg border border-red-400/30 bg-red-400/10 px-4 py-2.5 text-sm text-red-200">
               {error}

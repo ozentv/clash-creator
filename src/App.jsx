@@ -14,20 +14,26 @@ import PlayerDialog from './components/PlayerDialog.jsx';
 const DEFAULT_TITLE = document.title;
 const isTab = (key) => TABS.some(([k]) => k === key);
 
-// L'adresse reflète le clan et l'onglet affichés : ?clan=TAG&tab=guerres
+// L'adresse reflète le clan, l'onglet et la fiche joueur affichés : ?clan=TAG&tab=guerres&joueur=TAG
 function readUrl() {
   const params = new URLSearchParams(window.location.search);
   const tab = params.get('tab');
-  return { tag: normalizeTag(params.get('clan') ?? ''), tab: isTab(tab) ? tab : 'apercu' };
+  const player = normalizeTag(params.get('joueur') ?? '');
+  return {
+    tag: normalizeTag(params.get('clan') ?? ''),
+    tab: isTab(tab) ? tab : 'apercu',
+    player: player && `#${player}`,
+  };
 }
 
-function writeUrl(clan, tab) {
+function writeUrl(clan, tab, playerTag) {
   const url = new URL(window.location.href);
   url.search = '';
   if (clan) {
     url.searchParams.set('clan', clan.tag.replace('#', ''));
     if (tab !== 'apercu') url.searchParams.set('tab', tab);
   }
+  if (playerTag) url.searchParams.set('joueur', playerTag.replace('#', ''));
   window.history.replaceState(null, '', url);
 }
 
@@ -35,7 +41,7 @@ export default function App() {
   const { status, clan, demo, error, load, reset } = useClan();
   const { recent, remember, forget } = useRecentClans();
   const [tab, setTab] = useState(() => readUrl().tab);
-  const [playerTag, setPlayerTag] = useState(null);
+  const [playerTag, setPlayerTag] = useState(() => readUrl().player);
   useSpotlight();
 
   useEffect(() => {
@@ -48,9 +54,9 @@ export default function App() {
   }, [clan, remember]);
 
   useEffect(() => {
-    writeUrl(clan, tab);
+    writeUrl(clan, tab, playerTag);
     document.title = clan ? `${clan.name} · Clash Creator` : DEFAULT_TITLE;
-  }, [clan, tab]);
+  }, [clan, tab, playerTag]);
 
   const goHome = useCallback(() => {
     reset();
@@ -88,7 +94,14 @@ export default function App() {
             </span>
           </button>
           {clan && (
-            <ClanSearch onSearch={search} loading={loading} currentTag={clan.tag} variant="compact" hotkey />
+            <ClanSearch
+              onSearch={search}
+              onPlayer={setPlayerTag}
+              loading={loading}
+              currentTag={clan.tag}
+              variant="compact"
+              hotkey
+            />
           )}
         </div>
       </header>
@@ -110,6 +123,7 @@ export default function App() {
       ) : (
         <Landing
           onSearch={search}
+          onPlayer={setPlayerTag}
           loading={loading}
           error={status === 'error' ? error : null}
           recent={recent}
@@ -117,7 +131,16 @@ export default function App() {
         />
       )}
 
-      <PlayerDialog tag={playerTag} onClose={() => setPlayerTag(null)} members={clan?.members} />
+      <PlayerDialog
+        tag={playerTag}
+        onClose={() => setPlayerTag(null)}
+        members={clan?.members}
+        currentClanTag={clan?.tag ?? null}
+        onOpenClan={(tag) => {
+          setPlayerTag(null);
+          search(normalizeTag(tag));
+        }}
+      />
 
       <footer className="border-t border-white/[0.08]">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">

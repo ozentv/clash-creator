@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Search, Shield } from 'lucide-react';
+import { Search, Shield, User } from 'lucide-react';
 import { normalizeTag } from '../lib/tag.js';
 import { searchClans } from '../api/clashApi.js';
 
@@ -35,8 +35,9 @@ function ResultRow({ clan, onPick }) {
 }
 
 // variant "hero" : grande barre de la page d'accueil ; "compact" : barre de l'en-tête.
-export default function ClanSearch({ onSearch, loading, currentTag, variant = 'hero', hotkey = false }) {
+export default function ClanSearch({ onSearch, onPlayer, loading, currentTag, variant = 'hero', hotkey = false }) {
   const [value, setValue] = useState('');
+  const [mode, setMode] = useState('clan'); // clan | player
   const [message, setMessage] = useState(null);
   const [results, setResults] = useState(null); // null = liste fermée
   const [searching, setSearching] = useState(false);
@@ -84,6 +85,18 @@ export default function ClanSearch({ onSearch, loading, currentTag, variant = 'h
     setMessage(null);
     setResults(null);
 
+    // Le jeu ne permet de retrouver un joueur que par son tag.
+    if (mode === 'player') {
+      const tag = normalizeTag(input);
+      if (tag) {
+        onPlayer(`#${tag}`);
+        setValue('');
+      } else {
+        setMessage('Tag de joueur invalide. Il se trouve sous le pseudo, sur le profil du joueur en jeu.');
+      }
+      return;
+    }
+
     if (input.startsWith('#')) {
       const tag = normalizeTag(input);
       if (tag) onSearch(tag);
@@ -108,6 +121,15 @@ export default function ClanSearch({ onSearch, loading, currentTag, variant = 'h
   const asTag = results && normalizeTag(value);
   const busy = loading || searching;
   const inputId = `clan-search-${variant}`;
+  const player = mode === 'player';
+  const Icon = player ? User : Search;
+
+  function switchMode(next) {
+    setMode(next);
+    setMessage(null);
+    setResults(null);
+    inputRef.current?.focus();
+  }
 
   const bar = (
     <div
@@ -115,13 +137,25 @@ export default function ClanSearch({ onSearch, loading, currentTag, variant = 'h
         hero ? 'p-2 pl-5' : 'border border-white/10 p-1 pl-3 focus-within:border-accent-400/60'
       }`}
     >
-      <Search className={`shrink-0 text-accent-400 ${hero ? 'size-5' : 'size-4'}`} aria-hidden="true" />
+      {hero ? (
+        <Icon className="size-5 shrink-0 text-accent-400" aria-hidden="true" />
+      ) : (
+        <button
+          type="button"
+          onClick={() => switchMode(player ? 'clan' : 'player')}
+          aria-label={`Recherche de ${player ? 'joueur' : 'clan'}. Passer à la recherche de ${player ? 'clan' : 'joueur'}`}
+          className="flex shrink-0 cursor-pointer items-center gap-1 rounded-md bg-white/[0.06] px-2 py-1 text-xs font-medium text-accent-400 hover:bg-white/10"
+        >
+          <Icon className="size-3.5" aria-hidden="true" />
+          {player ? 'Joueur' : 'Clan'}
+        </button>
+      )}
       <input
         ref={inputRef}
         id={inputId}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder={hero ? 'Nom du clan ou #TAG' : 'Chercher un clan…'}
+        placeholder={player ? '#TAG du joueur' : hero ? 'Nom du clan ou #TAG' : 'Nom ou #TAG…'}
         autoComplete="off"
         spellCheck={false}
         aria-describedby={message ? `${inputId}-message` : undefined}
@@ -139,16 +173,35 @@ export default function ClanSearch({ onSearch, loading, currentTag, variant = 'h
         className={`btn btn-primary shrink-0 ${hero ? 'px-5 py-2.5 text-base' : 'px-3 py-1.5'}`}
         disabled={busy}
       >
-        {busy ? 'Recherche…' : hero ? 'Analyser' : 'OK'}
+        {busy ? 'Recherche…' : hero ? (player ? 'Voir le joueur' : 'Analyser') : 'OK'}
       </button>
     </div>
   );
 
   return (
     <div ref={rootRef} className={`relative w-full text-left ${hero ? 'mx-auto max-w-2xl' : 'max-w-md'}`}>
+      {hero && (
+        <div role="group" aria-label="Type de recherche" className="mb-3 flex justify-center gap-2">
+          {[
+            ['clan', 'Clan', Search],
+            ['player', 'Joueur', User],
+          ].map(([key, label, ModeIcon]) => (
+            <button
+              key={key}
+              type="button"
+              className="btn btn-quiet px-3 py-1.5"
+              aria-pressed={mode === key}
+              onClick={() => switchMode(key)}
+            >
+              <ModeIcon className="size-4" aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <form onSubmit={handleSubmit} role="search">
         <label htmlFor={inputId} className="sr-only">
-          Nom ou tag du clan
+          {player ? 'Tag du joueur' : 'Nom ou tag du clan'}
         </label>
         {hero ? <div className="glow-frame">{bar}</div> : bar}
       </form>

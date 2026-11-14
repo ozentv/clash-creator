@@ -9,6 +9,8 @@ import {
   fetchClan,
   fetchCurrentWar,
   fetchPlayer,
+  clanFetchedAt,
+  playerFetchedAt,
   fetchWarLog,
   fetchRaidSeasons,
   loadLeague,
@@ -187,6 +189,7 @@ app.get(
   '/api/clan/:tag',
   withTag(async (tag) => ({
     clan: DEMO ? buildDemoClan(tag) : toClanDto(await fetchClan(tag, TOKEN)),
+    fetchedAt: DEMO ? new Date().toISOString() : clanFetchedAt(tag),
   })),
 );
 
@@ -242,10 +245,13 @@ app.get(
 app.get(
   '/api/player/:tag',
   withTag(async (tag) => {
-    if (!DEMO) return { player: toPlayerDto(await fetchPlayer(tag, TOKEN)) };
+    if (!DEMO) {
+      const player = toPlayerDto(await fetchPlayer(tag, TOKEN));
+      return { player, fetchedAt: playerFetchedAt(tag) };
+    }
     const player = buildDemoPlayer(tag);
     if (!player) throw new CocApiError(404, 'Joueur introuvable.');
-    return { player };
+    return { player, fetchedAt: new Date().toISOString() };
   }),
 );
 

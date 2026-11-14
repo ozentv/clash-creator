@@ -1,8 +1,10 @@
+import { useRef } from 'react';
 import { Landmark } from 'lucide-react';
 import { getRaid } from '../api/clashApi.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { formatDate, formatNumber } from '../lib/format.js';
 import AsyncSection from './AsyncSection.jsx';
+import ExportButtons from './ExportButtons.jsx';
 
 function Figure({ label, value }) {
   return (
@@ -15,6 +17,7 @@ function Figure({ label, value }) {
 
 export default function RaidPanel({ clan, onSelectPlayer }) {
   const state = useAsync(getRaid, clan.tag);
+  const exportRef = useRef(null);
 
   return (
     <AsyncSection icon={Landmark} title="Raids de la capitale" state={state}>
@@ -25,13 +28,22 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
         const raiders = new Set(raid.members.map((m) => m.tag));
         const absent = clan.members.filter((m) => !raiders.has(m.tag));
         return (
-          <>
-            <p className="border-b border-white/[0.08] p-4 text-sm text-zinc-300">
-              <span className="mr-2 rounded-md bg-accent-400/10 px-2 py-0.5 text-xs font-semibold text-accent-400">
-                {raid.state === 'ongoing' ? 'Week-end en cours' : 'Dernier week-end'}
-              </span>
-              du {formatDate(raid.startTime)} au {formatDate(raid.endTime)}
-            </p>
+          <div ref={exportRef} className="bg-ink-900">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] p-4">
+              <p className="text-sm text-zinc-300">
+                <span className="mr-2 rounded-md bg-accent-400/10 px-2 py-0.5 text-xs font-semibold text-accent-400">
+                  {raid.state === 'ongoing' ? 'Week-end en cours' : 'Dernier week-end'}
+                </span>
+                du {formatDate(raid.startTime)} au {formatDate(raid.endTime)}
+              </p>
+              <ExportButtons
+                compact
+                targetRef={exportRef}
+                filename={`raids-${clan.tag.replace('#', '').toLowerCase()}`}
+                title="Raids de la capitale"
+                subtitle={clan.name}
+              />
+            </div>
             <dl className="grid grid-cols-2 gap-px border-b border-white/[0.08] bg-white/5 lg:grid-cols-3">
               <Figure label="Or de capitale pillé" value={formatNumber(raid.totalLoot)} />
               <Figure label="Attaques utilisées" value={formatNumber(raid.totalAttacks)} />
@@ -66,7 +78,7 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
               </div>
             )}
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" data-story-skip>
               <table className="w-full min-w-[460px] text-left text-sm">
                 <thead className="text-xs text-zinc-500">
                   <tr>
@@ -102,7 +114,7 @@ export default function RaidPanel({ clan, onSelectPlayer }) {
                 </tbody>
               </table>
             </div>
-          </>
+          </div>
         );
       }}
     </AsyncSection>

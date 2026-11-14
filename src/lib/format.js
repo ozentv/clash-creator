@@ -40,3 +40,11 @@ export const formatCompact = (n) => cf.format(n);
 
 // 1 -> "1er", 2 -> "2e"
 export const formatRank = (n) => (n === 1 ? '1er' : `${n}e`);
+
+// "à l'instant", "il y a 3 min", "il y a 2 h"
+export function formatAgo(ms) {
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) return "à l'instant";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  return `il y a ${Math.floor(minutes / 60)} h`;
+}

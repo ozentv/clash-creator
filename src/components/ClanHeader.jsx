@@ -1,18 +1,13 @@
-import { useState } from 'react';
-import { Check, Link, MapPin, Medal, RefreshCw, Shield, Swords, Trophy } from 'lucide-react';
+import { Link, MapPin, Medal, RefreshCw, Shield, Swords, Trophy } from 'lucide-react';
 import { formatNumber } from '../lib/format.js';
+import { leagueName } from '../lib/names.js';
+import { copyText } from '../lib/toast.js';
+import Freshness from './Freshness.jsx';
 
 export default function ClanHeader({ clan, onRefresh, refreshing }) {
-  const [copied, setCopied] = useState(false);
-  async function copyLink() {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
   const facts = [
     clan.location && [MapPin, clan.location],
-    clan.warLeague && [Swords, clan.warLeague],
+    clan.warLeague && [Swords, leagueName(clan.warLeague)],
     [Medal, `${formatNumber(clan.warWins)} guerres gagnées`],
     [Trophy, `${formatNumber(clan.points)} points`],
   ].filter(Boolean);
@@ -43,11 +38,14 @@ export default function ClanHeader({ clan, onRefresh, refreshing }) {
               </li>
             ))}
           </ul>
+          <div className="mt-3">
+            <Freshness at={clan.fetchedAt} />
+          </div>
         </div>
         <div className="flex shrink-0 gap-2 sm:flex-col">
-          <button type="button" className="btn btn-quiet" onClick={copyLink}>
-            {copied ? <Check className="size-4" aria-hidden="true" /> : <Link className="size-4" aria-hidden="true" />}
-            {copied ? 'Lien copié' : 'Copier le lien'}
+          <button type="button" className="btn btn-quiet" onClick={() => copyText(window.location.href)}>
+            <Link className="size-4" aria-hidden="true" />
+            Copier le lien
           </button>
           <button type="button" className="btn btn-quiet" onClick={onRefresh} disabled={refreshing}>
             <RefreshCw className={`size-4 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />

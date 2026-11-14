@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Search, Users } from 'lucide-react';
 import { formatNumber, formatSigned, ROLE_LABELS } from '../lib/format.js';
+import { leagueName } from '../lib/names.js';
 
 const ROLE_RANK = { leader: 0, coLeader: 1, admin: 2, member: 3 };
 const COLUMNS = [
@@ -102,7 +103,7 @@ export default function MemberList({ members, onSelectPlayer }) {
                 <td className="px-4 py-2.5 text-xs text-zinc-400">
                   <span className="flex items-center gap-1.5">
                     {m.leagueIcon && <img src={m.leagueIcon} alt="" loading="lazy" className="size-6" />}
-                    {m.league ?? '—'}
+                    {leagueName(m.league) ?? '—'}
                   </span>
                 </td>
                 <td className="px-4 py-2.5 text-right font-medium text-white tabular-nums">

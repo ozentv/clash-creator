@@ -2,7 +2,7 @@
 
 Analyse un clan Clash of Clans à partir de son nom ou de son tag.
 
-- **Aperçu** : chiffres clés, cinq classements exportables en PNG (trophées, dons, bilan des dons,
+- **Aperçu** : chiffres clés, cinq classements exportables en image (trophées, dons, bilan des dons,
   niveau, hôtel de ville), composition du clan et membres probablement inactifs.
 - **Guerres** : guerre en cours, ligue de guerre de clans, historique des guerres.
 - **Capitale** : week-end de raid, attaques et or pillé par membre.
@@ -14,6 +14,9 @@ Analyse un clan Clash of Clans à partir de son nom ou de son tag.
 - **Bibliothèque** : pages Compositions et Bases avec les liens de partage du jeu, alimentées par
   les fichiers de `src/data` et, si une base de données est configurée, par un formulaire
   protégé par mot de passe (bouton « Gérer »).
+
+Les classements, la guerre, les raids et la page joueur s'exportent en image, au format normal
+ou en story verticale (1080 × 1920).
 
 L'adresse reflète la page affichée (`?clan=TAG&tab=guerres`, `?joueur=TAG&vue=armee`,
 `?page=compositions`) : tout lien est partageable et le bouton « précédent » fonctionne.
@@ -77,7 +80,8 @@ server/               Proxy Express : garde le token secret et contourne l'absen
 src/
   api/clashApi.js     Appels du front vers le proxy
   hooks/              useRoute (navigation), useClan, useAsync, useRecentClans, useReveal, useSpotlight
-  lib/                Logique pure : tag, classements, statistiques, formats, export PNG
+  lib/                Logique pure : tag, classements, statistiques, formats, noms français,
+                      export en image, messages de confirmation
   data/               Bibliothèque : compositions.json et bases.json
   assets/             Images facultatives : units/ (icônes d'unités), bases/ (captures de bases)
   components/         Landing, ClanView, PlayerPage, Library et leurs panneaux

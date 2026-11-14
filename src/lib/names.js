@@ -62,6 +62,75 @@ const UNIT_NAMES = {
   'Mighty Yak': 'Yack puissant',
   Unicorn: 'Licorne',
   Phoenix: 'Phénix',
+  'Apprentice Warden': 'Apprenti gardien',
+  Druid: 'Druide',
+  Thrower: 'Lanceur',
+  Furnace: 'Fournaise',
+  // Super troupes
+  'Super Barbarian': 'Super barbare',
+  'Super Archer': 'Super archer',
+  'Super Giant': 'Super géant',
+  'Sneaky Goblin': 'Gobelin furtif',
+  'Super Wall Breaker': 'Super sapeur',
+  'Rocket Balloon': 'Ballon-fusée',
+  'Super Wizard': 'Super sorcier',
+  'Super Dragon': 'Super dragon',
+  'Inferno Dragon': 'Dragon infernal',
+  'Super Minion': 'Super gargouille',
+  'Super Valkyrie': 'Super valkyrie',
+  'Super Witch': 'Super sorcière',
+  'Ice Hound': 'Molosse de glace',
+  'Super Bowler': 'Super bouliste',
+  'Super Miner': 'Super mineur',
+  'Super Hog Rider': 'Super chevaucheur de cochon',
+  'Super Yeti': 'Super yéti',
+  // Autres sorts, engins et familiers
+  'Overgrowth Spell': 'Prolifération',
+  'Revive Spell': 'Résurrection',
+  'Troop Launcher': 'Lance-troupes',
+  'Poison Lizard': 'Lézard venimeux',
+  'Spirit Fox': 'Renard spirituel',
+  'Angry Jelly': 'Gelée furieuse',
+  // Équipements de héros
+  'Barbarian Puppet': 'Marionnette barbare',
+  'Rage Vial': 'Fiole de rage',
+  'Earthquake Boots': 'Bottes sismiques',
+  Vampstache: 'Vampistache',
+  'Giant Gauntlet': 'Gantelet géant',
+  'Spiky Ball': 'Boule à pointes',
+  'Snake Bracelet': 'Bracelet serpent',
+  'Archer Puppet': 'Marionnette archer',
+  'Invisibility Vial': "Fiole d'invisibilité",
+  'Giant Arrow': 'Flèche géante',
+  'Healer Puppet': 'Marionnette guérisseuse',
+  'Frozen Arrow': 'Flèche gelée',
+  'Magic Mirror': 'Miroir magique',
+  'Action Figure': 'Figurine articulée',
+  'Eternal Tome': 'Tome éternel',
+  'Life Gem': 'Gemme de vie',
+  'Rage Gem': 'Gemme de rage',
+  'Healing Tome': 'Tome de guérison',
+  Fireball: 'Boule de feu',
+  'Royal Gem': 'Gemme royale',
+  'Seeking Shield': 'Bouclier chercheur',
+  'Hog Rider Puppet': 'Marionnette chevaucheur de cochon',
+  'Haste Vial': 'Fiole de précipitation',
+  'Rocket Spear': 'Lance-roquette',
+  'Electro Boots': 'Bottes électriques',
+  'Dark Orb': 'Orbe sombre',
+  'Metal Pants': 'Pantalon en métal',
+  // Base des ouvriers
+  'Raged Barbarian': 'Barbare enragé',
+  'Sneaky Archer': 'Archer furtive',
+  'Boxer Giant': 'Géant boxeur',
+  'Beta Minion': 'Gargouille bêta',
+  Bomber: 'Bombardier',
+  'Cannon Cart': 'Chariot à canon',
+  'Night Witch': 'Sorcière de la nuit',
+  'Drop Ship': 'Vaisseau de largage',
+  'Power P.E.K.K.A': 'Super P.E.K.K.A',
+  'Hog Glider': 'Planeur à cochon',
+  'Electrofire Wizard': 'Sorcier électrofeu',
 };
 export const unitName = (name) => UNIT_NAMES[name] ?? name;
 
@@ -135,3 +204,56 @@ export const SIEGE_CHOICES = [
 // "sorcier" -> "Wizard" : retrouve le nom de l'API à partir du nom français saisi.
 const API_NAMES = new Map(Object.entries(UNIT_NAMES).map(([api, fr]) => [fr.toLowerCase(), api]));
 export const toApiName = (name) => API_NAMES.get(name.trim().toLowerCase()) ?? name.trim();
+
+// Ligues : "Crystal League II" -> "Ligue Cristal II". Un nom inconnu garde son mot anglais.
+const LEAGUE_WORDS = {
+  Bronze: 'Bronze', Silver: 'Argent', Gold: 'Or', Crystal: 'Cristal', Master: 'Maître',
+  Champion: 'Champion', Titan: 'Titan', Legend: 'Légende',
+  Wood: 'Bois', Clay: 'Argile', Stone: 'Pierre', Copper: 'Cuivre', Brass: 'Laiton', Iron: 'Fer',
+  Steel: 'Acier', Titanium: 'Titane', Platinum: 'Platine', Emerald: 'Émeraude', Ruby: 'Rubis',
+  Diamond: 'Diamant',
+};
+export function leagueName(name) {
+  if (!name) return name;
+  if (name === 'Unranked') return 'Non classé';
+  const match = /^(.+?) League(?: (.+))?$/.exec(name);
+  if (!match) return name;
+  return ['Ligue', LEAGUE_WORDS[match[1]] ?? match[1], match[2]].filter(Boolean).join(' ');
+}
+
+// Ce que mesure chaque succès, en français. Le titre officiel du succès reste celui du jeu.
+export const ACHIEVEMENT_LABELS = {
+  ...CAREER_LABELS,
+  'Bigger Coffers': "Niveau de la réserve d'or",
+  'Get those Goblins!': 'Étoiles gagnées en campagne solo',
+  'Get even more Goblins!': 'Étoiles gagnées en campagne solo (suite)',
+  'Bigger & Better': "Niveau de l'hôtel de ville",
+  'Nice and Tidy': 'Obstacles retirés',
+  'Discover New Troops': 'Troupes débloquées à la caserne',
+  'Sweet Victory!': 'Record de trophées',
+  'Empire Builder': 'Niveau du château de clan',
+  'Wall Buster': 'Remparts détruits',
+  'Union Buster': "Cabanes d'ouvrier détruites",
+  'War Hero': 'Étoiles gagnées en guerre de clans',
+  'Clan War Wealth': "Or récupéré du butin de guerre",
+  'Firefighter': 'Tours de l’enfer détruites',
+  'X-Bow Exterminator': 'Arcs-X détruits',
+  'Mortar Mauler': 'Mortiers détruits',
+  'Anti-Artillery': "Artilleries aigle détruites",
+  'Shattered and Scattered': 'Scattershots détruits',
+  'Not So Easy This Time': "Hôtels de ville armés détruits",
+  'League All-Star': 'Meilleure ligue atteinte',
+  'Master Engineering': 'Niveau de la maison des ouvriers',
+  'Next Generation Model': 'Niveau de la machine de combat',
+  'Un-Build It': 'Maisons des ouvriers détruites',
+  'Champion Builder': 'Record de trophées à la base des ouvriers',
+  'High Gear': 'Bâtiments améliorés avec le mécanisme',
+  'Hidden Treasures': 'Tour de l’horloge reconstruite',
+  'Superb Work': 'Super troupes activées',
+  'Counterspell': 'Tours de sorts détruites',
+  'Monolith Masher': 'Monolithes détruits',
+  'Get those other Goblins!': 'Étoiles gagnées sur la carte des ouvriers',
+  'Ungrateful Child': 'Ogives du chef des gobelins détruites',
+  'Bust This!': 'Statues du roi gobelin détruites',
+  'Keep Your Account Safe!': 'Compte protégé par Supercell ID',
+};

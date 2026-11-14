@@ -12,6 +12,7 @@ import ClanSkeleton from './components/ClanSkeleton.jsx';
 import ClanView from './components/ClanView.jsx';
 import PlayerPage from './components/PlayerPage.jsx';
 import Library from './components/Library.jsx';
+import Toaster from './components/Toaster.jsx';
 
 const DEFAULT_TITLE = document.title;
 const NAV = [
@@ -156,6 +157,7 @@ export default function App() {
       </header>
 
       {page}
+      <Toaster />
 
       <footer className="border-t border-white/[0.08]">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">

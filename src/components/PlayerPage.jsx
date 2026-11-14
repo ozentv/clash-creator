@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import {
   ArrowLeft,
   Award,
   Castle,
-  Check,
   Gift,
   History,
   Link,
@@ -17,7 +16,10 @@ import { getPlayer } from '../api/clashApi.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { rankMembers } from '../lib/rankings.js';
 import { formatCompact, formatNumber, formatRank, formatSigned, ROLE_LABELS } from '../lib/format.js';
-import { CAREER_LABELS, labelName, unitName } from '../lib/names.js';
+import { ACHIEVEMENT_LABELS, CAREER_LABELS, labelName, leagueName, unitName } from '../lib/names.js';
+import { copyText } from '../lib/toast.js';
+import ExportButtons from './ExportButtons.jsx';
+import Freshness from './Freshness.jsx';
 import AnimatedNumber from './AnimatedNumber.jsx';
 import Tabs from './Tabs.jsx';
 import UnitIcon from './UnitIcon.jsx';
@@ -30,9 +32,9 @@ const VIEWS = [
 ];
 const VILLAGE_LABELS = { home: 'Village principal', builderBase: 'Base des ouvriers', clanCapital: 'Capitale de clan' };
 
-function Panel({ icon: Icon, title, count, children, className = '' }) {
+function Panel({ icon: Icon, title, count, children, className = '', storySkip = false }) {
   return (
-    <section className={`card overflow-hidden ${className}`}>
+    <section className={`card overflow-hidden ${className}`} data-story-skip={storySkip ? '' : undefined}>
       <h3 className="section-label border-b border-white/[0.08] p-4">
         {Icon && <Icon className="size-4 text-accent-400" aria-hidden="true" />}
         {title}
@@ -137,13 +139,13 @@ function Profile({ player, ranks }) {
 
   return (
     <>
-      <div className="grid items-start gap-4 lg:grid-cols-3">
+      <div className="layout-grid grid items-start gap-4 lg:grid-cols-3">
         <Panel icon={Castle} title="Village principal" className="lg:col-span-2">
           <Facts
             items={[
               ['Hôtel de ville', player.townHallLevel ?? '—', player.townHallWeaponLevel && `Arme niveau ${player.townHallWeaponLevel}`],
               ['Niveau', player.expLevel],
-              ['Ligue', <span className="text-base">{player.league ?? 'Aucune'}</span>],
+              ['Ligue', <span className="text-base">{leagueName(player.league) ?? 'Aucune'}</span>],
               ['Trophées', formatNumber(player.trophies), `Record ${formatNumber(player.bestTrophies)}`],
               ['Étoiles de guerre', formatNumber(player.warStars)],
               ['Guerre', <span className="text-base">{player.warPreference === 'in' ? 'Partant' : player.warPreference === 'out' ? 'Pas dispo' : '—'}</span>],
@@ -186,7 +188,7 @@ function Profile({ player, ranks }) {
       </div>
 
       {legend && (
-        <Panel icon={Trophy} title="Ligue Légende">
+        <Panel icon={Trophy} title="Ligue Légende" storySkip>
           <Facts
             columns="sm:grid-cols-4"
             items={[
@@ -212,14 +214,14 @@ function Profile({ player, ranks }) {
       )}
 
       {player.builderBase && (
-        <Panel icon={Castle} title="Base des ouvriers">
+        <Panel icon={Castle} title="Base des ouvriers" storySkip>
           <Facts
             columns="sm:grid-cols-4"
             items={[
               ['Maison des ouvriers', player.builderBase.hallLevel],
               ['Trophées', formatNumber(player.builderBase.trophies)],
               ['Record de trophées', formatNumber(player.builderBase.bestTrophies)],
-              player.builderBase.league && ['Ligue', <span className="text-base">{player.builderBase.league}</span>],
+              player.builderBase.league && ['Ligue', <span className="text-base">{leagueName(player.builderBase.league)}</span>],
             ]}
           />
         </Panel>
@@ -230,14 +232,15 @@ function Profile({ player, ranks }) {
 
 function Army({ player }) {
   const groups = [
-    ['Héros', player.heroes, 'hero'],
-    ['Équipements de héros', player.equipment, 'equipment'],
-    ['Familiers', player.pets, 'pet'],
-    ['Troupes', player.troops, 'troop'],
-    ['Sorts', player.spells, 'spell'],
-    ['Engins de siège', player.siegeMachines, 'siege'],
-    ['Héros de la base des ouvriers', player.builderBase?.heroes ?? [], 'hero'],
-    ['Troupes de la base des ouvriers', player.builderBase?.troops ?? [], 'troop'],
+    // Le dernier élément indique les groupes laissés de côté dans l'export en story.
+    ['Héros', player.heroes, 'hero', false],
+    ['Équipements de héros', player.equipment, 'equipment', false],
+    ['Familiers', player.pets, 'pet', false],
+    ['Troupes', player.troops, 'troop', true],
+    ['Sorts', player.spells, 'spell', true],
+    ['Engins de siège', player.siegeMachines, 'siege', true],
+    ['Héros de la base des ouvriers', player.builderBase?.heroes ?? [], 'hero', true],
+    ['Troupes de la base des ouvriers', player.builderBase?.troops ?? [], 'troop', true],
   ].filter(([, units]) => units.length > 0);
 
   if (groups.length === 0) {
@@ -255,10 +258,10 @@ function Army({ player }) {
           ))}
         </p>
       )}
-      {groups.map(([title, units, category]) => {
+      {groups.map(([title, units, category, storySkip]) => {
         const maxed = units.filter((u) => u.level >= u.maxLevel).length;
         return (
-          <Panel key={title} title={title} count={`${units.length} · ${maxed} au max`}>
+          <Panel key={title} title={title} count={`${units.length} · ${maxed} au max`} storySkip={storySkip}>
             <UnitGrid units={units} category={category} />
           </Panel>
         );
@@ -300,11 +303,11 @@ function Achievements({ player }) {
     <>
       <p className="text-sm text-zinc-400">
         <span className="font-semibold text-white">{done}</span> succès terminés sur {player.achievements.length}.
-        Les intitulés sont affichés en anglais, tels que le jeu les fournit.
+        Le titre de chaque succès est celui du jeu, en anglais ; la ligne du dessous explique ce qu'il mesure.
       </p>
       {groups.map(([village, list]) => (
         <Panel key={village} icon={Award} title={VILLAGE_LABELS[village]} count={list.length}>
-          <ul className="grid gap-px bg-white/[0.05] md:grid-cols-2">
+          <ul className="layout-grid grid gap-px bg-white/[0.05] md:grid-cols-2">
             {list.map((a) => (
               <li key={a.name} className="bg-ink-900 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
@@ -315,7 +318,7 @@ function Achievements({ player }) {
                     ))}
                   </span>
                 </div>
-                {a.info && <p className="mt-0.5 truncate text-xs text-zinc-500">{a.info}</p>}
+                <p className="mt-0.5 truncate text-xs text-zinc-500">{ACHIEVEMENT_LABELS[a.name] ?? a.info}</p>
                 <div className="mt-2 flex items-center gap-3">
                   <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/[0.07]">
                     <div
@@ -354,7 +357,7 @@ function Skeleton() {
 // clan : clan actuellement chargé dans le site (ou null), pour les rangs et le bouton de retour.
 export default function PlayerPage({ tag, view, onView, clan, onOpenClan, onBack }) {
   const { status, data: player, error } = useAsync(getPlayer, tag);
-  const [copied, setCopied] = useState(false);
+  const exportRef = useRef(null);
   const fullTag = `#${tag}`;
 
   const ranks = useMemo(() => {
@@ -369,12 +372,6 @@ export default function PlayerPage({ tag, view, onView, clan, onOpenClan, onBack
       balance: rankIn('balance'),
     };
   }, [clan, fullTag]);
-
-  async function copyLink() {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6">
@@ -396,7 +393,7 @@ export default function PlayerPage({ tag, view, onView, clan, onOpenClan, onBack
       )}
 
       {status === 'success' && (
-        <>
+        <div ref={exportRef} className="flex flex-col gap-4">
           <section className="card rise overflow-hidden p-5 sm:p-7">
             <div className="pointer-events-none absolute -top-24 -right-16 size-64 rounded-full bg-accent-400/10 blur-3xl" />
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -417,7 +414,7 @@ export default function PlayerPage({ tag, view, onView, clan, onOpenClan, onBack
                   {player.league && (
                     <span className="flex items-center gap-1.5 rounded-md bg-white/[0.05] px-2.5 py-1 text-zinc-300">
                       {player.leagueIcon && <img src={player.leagueIcon} alt="" className="size-5" />}
-                      {player.league}
+                      {leagueName(player.league)}
                     </span>
                   )}
                   {player.labels.map((label) => (
@@ -427,8 +424,11 @@ export default function PlayerPage({ tag, view, onView, clan, onOpenClan, onBack
                     </span>
                   ))}
                 </p>
+                <div className="mt-3">
+                  <Freshness at={player.fetchedAt} />
+                </div>
               </div>
-              <div className="flex shrink-0 flex-wrap gap-2 sm:flex-col">
+              <div className="flex shrink-0 flex-wrap gap-2 sm:flex-col" data-no-export>
                 {player.clan ? (
                   <button type="button" className="btn btn-primary" onClick={() => onOpenClan(player.clan.tag)}>
                     {player.clan.badgeUrl ? (
@@ -441,10 +441,15 @@ export default function PlayerPage({ tag, view, onView, clan, onOpenClan, onBack
                 ) : (
                   <span className="rounded-lg border border-white/10 px-4 py-2 text-center text-sm text-zinc-500">Sans clan</span>
                 )}
-                <button type="button" className="btn btn-quiet" onClick={copyLink}>
-                  {copied ? <Check className="size-4" aria-hidden="true" /> : <Link className="size-4" aria-hidden="true" />}
-                  {copied ? 'Lien copié' : 'Copier le lien'}
+                <button type="button" className="btn btn-quiet" onClick={() => copyText(window.location.href)}>
+                  <Link className="size-4" aria-hidden="true" />
+                  Copier le lien
                 </button>
+                <ExportButtons
+                  compact
+                  targetRef={exportRef}
+                  filename={`joueur-${tag.toLowerCase()}-${view}`}
+                />
               </div>
             </div>
           </section>
@@ -472,7 +477,7 @@ export default function PlayerPage({ tag, view, onView, clan, onOpenClan, onBack
             {view === 'carriere' && <Career player={player} />}
             {view === 'succes' && <Achievements player={player} />}
           </div>
-        </>
+        </div>
       )}
     </main>
   );

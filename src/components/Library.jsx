@@ -1,23 +1,18 @@
 import { useCallback, useState } from 'react';
-import { BookOpen, Check, Copy, ExternalLink, LayoutGrid, Lock, LockOpen, Plus, Swords, Trash2 } from 'lucide-react';
+import { BookOpen, Copy, ExternalLink, LayoutGrid, Lock, LockOpen, Plus, Swords, Trash2 } from 'lucide-react';
 import { addLibraryEntry, adminLogin, deleteLibraryEntry, getLibrary } from '../api/clashApi.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { safeLink } from '../lib/libraryRules.js';
+import { copyText, toast } from '../lib/toast.js';
 import LibraryForm from './LibraryForm.jsx';
 import { baseImageUrl } from '../lib/baseImages.js';
 import { unitName } from '../lib/names.js';
 import UnitIcon from './UnitIcon.jsx';
 
 function LinkButtons({ link, openLabel }) {
-  const [copied, setCopied] = useState(false);
   const url = safeLink(link);
   if (!url) {
     return <p className="text-xs text-zinc-600">Lien du jeu pas encore ajouté.</p>;
-  }
-  async function copy() {
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
   }
   return (
     <div className="flex flex-wrap gap-2">
@@ -25,9 +20,9 @@ function LinkButtons({ link, openLabel }) {
         <ExternalLink className="size-4" aria-hidden="true" />
         {openLabel}
       </a>
-      <button type="button" className="btn btn-quiet" onClick={copy}>
-        {copied ? <Check className="size-4" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
-        {copied ? 'Lien copié' : 'Copier le lien'}
+      <button type="button" className="btn btn-quiet" onClick={() => copyText(url)}>
+        <Copy className="size-4" aria-hidden="true" />
+        Copier le lien
       </button>
     </div>
   );
@@ -182,6 +177,7 @@ function AdminBar({ password, onUnlock, onLock, onAdd, addLabel }) {
     try {
       await adminLogin(value);
       onUnlock(value);
+      toast('Mode gestion activé');
       setOpen(false);
       setValue('');
     } catch (err) {
@@ -281,10 +277,12 @@ export default function Library({ kind }) {
     setAdding(false);
     setHall(null);
     setVersion((v) => v + 1);
+    toast('Fiche enregistrée');
   }
   async function remove(id) {
     await deleteLibraryEntry(id, password);
     setVersion((v) => v + 1);
+    toast('Fiche supprimée');
   }
 
   return (

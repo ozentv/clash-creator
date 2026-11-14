@@ -14,12 +14,13 @@ async function get(path) {
 
 const clean = (tag) => encodeURIComponent(tag.replace(/^#/, ''));
 
-export const getClan = (tag) => get(`/api/clan/${clean(tag)}`); // { demo, clan }
+export const getClan = (tag) => get(`/api/clan/${clean(tag)}`); // { demo, clan, fetchedAt }
 export const getWar = (tag) => get(`/api/clan/${clean(tag)}/war`).then((b) => b.war);
 export const getWarLog = (tag) => get(`/api/clan/${clean(tag)}/warlog`); // { private, wars }
 export const getLeague = (tag) => get(`/api/clan/${clean(tag)}/league`).then((b) => b.league);
 export const getRaid = (tag) => get(`/api/clan/${clean(tag)}/raids`).then((b) => b.raid);
-export const getPlayer = (tag) => get(`/api/player/${clean(tag)}`).then((b) => b.player);
+export const getPlayer = (tag) =>
+  get(`/api/player/${clean(tag)}`).then((b) => ({ ...b.player, fetchedAt: b.fetchedAt }));
 export const searchClans = (name) =>
   get(`/api/clans/search?name=${encodeURIComponent(name)}`).then((b) => b.clans);
 

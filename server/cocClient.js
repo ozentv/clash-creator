@@ -33,7 +33,7 @@ async function cocGet(path, token) {
   if (hit && hit.expires > Date.now()) return hit.data;
   const data = await cocFetch(path, token);
   if (cache.size > 500) cache.clear();
-  cache.set(path, { data, expires: Date.now() + CACHE_TTL });
+  cache.set(path, { data, expires: Date.now() + CACHE_TTL, at: Date.now() });
   return data;
 }
 
@@ -67,6 +67,12 @@ async function cocFetch(path, token) {
 }
 
 const tagPath = (tag) => encodeURIComponent('#' + tag);
+
+// Heure à laquelle les données d'un clan ou d'un joueur ont été lues dans l'API (elles restent
+// en cache quelques dizaines de secondes).
+const fetchedAt = (path) => new Date(cache.get(path)?.at ?? Date.now()).toISOString();
+export const clanFetchedAt = (tag) => fetchedAt(`/clans/${tagPath(tag)}`);
+export const playerFetchedAt = (tag) => fetchedAt(`/players/${tagPath(tag)}`);
 
 export const fetchClan = (tag, token) => cocGet(`/clans/${tagPath(tag)}`, token);
 export const fetchCurrentWar = (tag, token) => cocGet(`/clans/${tagPath(tag)}/currentwar`, token);

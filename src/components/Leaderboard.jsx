@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
-import { Castle, Download, Gift, Scale, Star, Trophy } from 'lucide-react';
+import { Castle, Gift, Scale, Star, Trophy } from 'lucide-react';
 import { RANKINGS, rankMembers } from '../lib/rankings.js';
-import { exportNodeAsPng } from '../lib/exportPng.js';
+import ExportButtons from './ExportButtons.jsx';
 import { ROLE_LABELS } from '../lib/format.js';
 
 const ICONS = { trophies: Trophy, donations: Gift, balance: Scale, expLevel: Star, townHall: Castle };
@@ -15,8 +15,6 @@ const SIZES = [10, 20, 50];
 export default function Leaderboard({ clan, onSelectPlayer }) {
   const [type, setType] = useState('trophies');
   const [size, setSize] = useState(10);
-  const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState(false);
   const cardRef = useRef(null);
 
   const ranking = RANKINGS[type];
@@ -25,20 +23,6 @@ export default function Leaderboard({ clan, onSelectPlayer }) {
     () => rankMembers(clan.members, type).slice(0, size),
     [clan.members, type, size],
   );
-
-  async function handleExport() {
-    setExporting(true);
-    setExportError(false);
-    try {
-      const slug = clan.tag.replace('#', '').toLowerCase();
-      await exportNodeAsPng(cardRef.current, `classement-${ranking.key}-${slug}.png`);
-    } catch (err) {
-      console.error(err);
-      setExportError(true);
-    } finally {
-      setExporting(false);
-    }
-  }
 
   return (
     <section className="card overflow-hidden">
@@ -61,10 +45,10 @@ export default function Leaderboard({ clan, onSelectPlayer }) {
             ))}
           </select>
         </label>
-        <button type="button" className="btn btn-primary" onClick={handleExport} disabled={exporting}>
-          <Download className="size-4" aria-hidden="true" />
-          {exporting ? 'Export…' : 'Exporter en PNG'}
-        </button>
+        <ExportButtons
+          targetRef={cardRef}
+          filename={`classement-${ranking.key}-${clan.tag.replace('#', '').toLowerCase()}`}
+        />
         <div className="flex w-full flex-wrap gap-2 pt-1">
           {Object.values(RANKINGS).map((r) => (
             <button
@@ -79,12 +63,6 @@ export default function Leaderboard({ clan, onSelectPlayer }) {
           ))}
         </div>
       </div>
-      {exportError && (
-        <p role="alert" className="px-4 pt-3 text-sm text-red-300">
-          L'export a échoué. Réessaie.
-        </p>
-      )}
-
       {/* Zone capturée par l'export PNG */}
       <div ref={cardRef} className="bg-ink-900 p-4">
         <div className="mb-3 flex items-end justify-between gap-3">
@@ -97,7 +75,6 @@ export default function Leaderboard({ clan, onSelectPlayer }) {
               {ranking.hint && ` · ${ranking.hint}`}
             </p>
           </div>
-          <p className="shrink-0 font-mono text-[11px] tracking-widest text-zinc-600 uppercase">Clash Creator</p>
         </div>
         <ol className="divide-y divide-white/5 rounded-lg border border-white/10">
           {rows.map((m) => (

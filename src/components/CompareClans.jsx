@@ -5,6 +5,7 @@ import { useAsync } from '../hooks/useAsync.js';
 import { computeStats } from '../lib/rankings.js';
 import { formatNumber } from '../lib/format.js';
 import { normalizeTag } from '../lib/tag.js';
+import { leagueName } from '../lib/names.js';
 
 function metrics(clan) {
   const stats = computeStats(clan.members);
@@ -134,8 +135,8 @@ export default function CompareClans({ clan, recent }) {
                 <th scope="row" className="px-4 py-2.5 text-left font-normal text-zinc-400">
                   Ligue de guerre
                 </th>
-                <td className="px-4 py-2.5 text-right text-zinc-300">{clan.warLeague ?? '—'}</td>
-                <td className="px-4 py-2.5 text-right text-zinc-300">{other.warLeague ?? '—'}</td>
+                <td className="px-4 py-2.5 text-right text-zinc-300">{leagueName(clan.warLeague) ?? '—'}</td>
+                <td className="px-4 py-2.5 text-right text-zinc-300">{leagueName(other.warLeague) ?? '—'}</td>
               </tr>
             </tbody>
           </table>

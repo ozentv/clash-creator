@@ -1,6 +1,6 @@
 import { Info } from 'lucide-react';
 import { formatNumber } from '../lib/format.js';
-import { CLAN_TYPE_LABELS, labelName, WAR_FREQUENCY_LABELS } from '../lib/names.js';
+import { CLAN_TYPE_LABELS, labelName, leagueName, WAR_FREQUENCY_LABELS } from '../lib/names.js';
 
 // Fiche d'identité du clan : conditions d'entrée, bilan de guerre, capitale.
 export default function ClanInfo({ clan }) {
@@ -20,10 +20,10 @@ export default function ClanInfo({ clan }) {
     ['Taux de victoire', played ? `${Math.round((clan.warWins / played) * 100)} %` : null],
     ['Série de victoires', clan.warWinStreak > 0 && formatNumber(clan.warWinStreak)],
     ['Journal de guerre', clan.warLogPublic == null ? null : clan.warLogPublic ? 'Public' : 'Privé'],
-    ['Ligue de guerre', clan.warLeague],
+    ['Ligue de guerre', leagueName(clan.warLeague)],
     ['Capitale', clan.capitalHallLevel && `Niveau ${clan.capitalHallLevel}`],
     ['Points de capitale', clan.capitalPoints != null && formatNumber(clan.capitalPoints)],
-    ['Ligue de capitale', clan.capitalLeague],
+    ['Ligue de capitale', leagueName(clan.capitalLeague)],
     ['Points base des ouvriers', clan.builderBasePoints != null && formatNumber(clan.builderBasePoints)],
   ].filter(([, value]) => value);
 

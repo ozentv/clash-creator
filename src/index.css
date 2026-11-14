@@ -292,3 +292,30 @@ body {
     transform: none;
   }
 }
+
+/* Pendant un export en image, tout est figé dans son état final. */
+.exporting *,
+.exporting *::before,
+.exporting *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.exporting [data-no-export] {
+  display: none !important;
+}
+
+/* Export en story : le bloc est capturé à 480 px de large, on force donc une mise en page étroite
+   (les points de rupture dépendent de la fenêtre, pas du bloc). */
+.exporting-story .grid[class*='grid-cols'] {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+.exporting-story .layout-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+.exporting-story [class*='col-span'] {
+  grid-column: auto !important;
+}
+/* Une story ne garde que l'essentiel : les longues listes en sont retirées. */
+.exporting-story [data-story-skip] {
+  display: none !important;
+}

@@ -11,7 +11,10 @@ export default function Tabs({ tabs, current, onChange, label, idPrefix }) {
   }
 
   return (
-    <div className="sticky top-14 z-10 -mx-4 border-b border-white/[0.08] bg-ink-950/80 px-4 backdrop-blur-xl">
+    <div
+      data-no-export
+      className="sticky top-14 z-10 -mx-4 border-b border-white/[0.08] bg-ink-950/80 px-4 backdrop-blur-xl"
+    >
       <div role="tablist" aria-label={label} onKeyDown={onKeyDown} className="flex gap-6 overflow-x-auto">
         {tabs.map(([key, text, Icon]) => (
           <button

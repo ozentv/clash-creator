@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import { Clock, Star, Swords } from 'lucide-react';
 import { getWar } from '../api/clashApi.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { formatDuration } from '../lib/format.js';
+import ExportButtons from './ExportButtons.jsx';
 
 const STATE_LABELS = {
   preparation: 'Jour de préparation',
@@ -148,7 +150,7 @@ function WarContent({ war, onSelectPlayer }) {
         </div>
       )}
 
-      <ol className="divide-y divide-white/5">
+      <ol className="divide-y divide-white/5" data-story-skip>
         {war.members.map((m) => (
           <li key={m.tag} className="row-hover flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
             <span className="w-6 shrink-0 text-sm text-zinc-500 tabular-nums">{m.position}</span>
@@ -189,13 +191,26 @@ function WarContent({ war, onSelectPlayer }) {
 
 export default function WarPanel({ clanTag, onSelectPlayer }) {
   const { status, data: war, error } = useAsync(getWar, clanTag);
+  const exportRef = useRef(null);
+  const exportable = status === 'success' && war.clan;
 
   return (
     <section className="card overflow-hidden">
-      <h3 className="section-label border-b border-white/[0.08] p-4">
-        <Swords className="size-4 text-accent-400" aria-hidden="true" />
-        Guerre de clan
-      </h3>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] p-4">
+        <h3 className="section-label">
+          <Swords className="size-4 text-accent-400" aria-hidden="true" />
+          Guerre de clan
+        </h3>
+        {exportable && (
+          <ExportButtons
+            compact
+            targetRef={exportRef}
+            filename={`guerre-${clanTag.replace('#', '').toLowerCase()}`}
+            title="Guerre de clan"
+            subtitle={`${war.clan.name} contre ${war.opponent.name}`}
+          />
+        )}
+      </div>
       {status === 'loading' && (
         <div role="status" aria-label="Chargement" className="flex flex-col gap-3 p-4">
           <div className="skeleton h-16 w-full" />
@@ -210,7 +225,9 @@ export default function WarPanel({ clanTag, onSelectPlayer }) {
       )}
       {status === 'success' && (
         <div className="rise">
-          <WarContent war={war} onSelectPlayer={onSelectPlayer} />
+          <div ref={exportRef} className="bg-ink-900">
+            <WarContent war={war} onSelectPlayer={onSelectPlayer} />
+          </div>
         </div>
       )}
     </section>

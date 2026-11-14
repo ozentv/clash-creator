@@ -100,6 +100,9 @@ export function buildDemoWar(tag) {
       attacks: attacks.length,
     },
     opponent: { tag: '#QQQQ', name: 'Les Rivaux', stars: 28, destruction: 71.9, attacks: 17 },
+    opponents: ['Ragnar', 'Vortex', 'LadyStorm', 'Brutus', 'Nyx', 'Titan42', 'Faucheur', 'Olaf', 'Zéphyr', 'Kaiser', 'Mirage', 'Rex', 'Sombra', 'Fléau', 'Pixel'].map(
+      (name, i) => ({ tag: `#RR${TAG_CHARS[i % 14]}${TAG_CHARS[Math.floor(i / 14)]}`, name, position: i + 1, townHallLevel: 17 - Math.floor(i / 4) }),
+    ),
     members,
   };
 }
@@ -285,4 +288,80 @@ export function buildDemoRaids() {
     districtsDestroyed: 21,
     members,
   };
+}
+
+export function buildDemoHistory(tag) {
+  const clan = buildDemoClan(tag);
+  const rand = seeded(57);
+  const rows = [];
+  let trophies = clan.members.reduce((n, m) => n + m.trophies, 0) - 9000;
+  let members = clan.members.slice(0, 27);
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(Date.now() - i * 86_400_000);
+    trophies += Math.round((rand() - 0.25) * 900);
+    if (i === 20) members = clan.members.slice(0, 29);
+    if (i === 11) members = clan.members.filter((_, n) => n !== 5);
+    if (i === 4) members = clan.members;
+    rows.push({
+      day: date.toISOString().slice(0, 10),
+      data: {
+        memberCount: members.length,
+        totalTrophies: trophies,
+        // Les dons repartent de zéro au début de chaque saison.
+        totalDonations: Math.round(((date.getUTCDate() - 1) / 30) * 52000 + rand() * 800),
+        points: 47000 + (29 - i) * 42,
+        warWins: 305 + Math.floor((29 - i) / 4),
+        members,
+      },
+    });
+  }
+  return rows;
+}
+
+export function buildDemoPlayerHistory(tag) {
+  const member = buildMembers().find((m) => m.tag === `#${tag}`);
+  if (!member) return [];
+  const rand = seeded(tag.charCodeAt(3) + 9);
+  let trophies = member.trophies - 380;
+  return Array.from({ length: 30 }, (_, n) => {
+    const date = new Date(Date.now() - (29 - n) * 86_400_000);
+    trophies += Math.round((rand() - 0.3) * 60);
+    return {
+      day: date.toISOString().slice(0, 10),
+      trophies: n === 29 ? member.trophies : trophies,
+      donations: Math.round(((date.getUTCDate() - 1) / 30) * member.donations * 1.4),
+      townHallLevel: member.townHallLevel,
+    };
+  });
+}
+
+export function buildDemoRoster() {
+  return buildMembers().map((m) => {
+    const player = buildDemoPlayer(m.tag.slice(1));
+    const levels = {};
+    for (const u of [...player.troops, ...player.spells, ...player.heroes, ...player.siegeMachines]) {
+      levels[u.name] = { level: u.level, maxLevel: u.maxLevel };
+    }
+    return { tag: m.tag, name: m.name, townHallLevel: m.townHallLevel, levels };
+  });
+}
+
+export const DEMO_LOCATIONS = [
+  { id: 'global', name: 'Monde', countryCode: null },
+  { id: '32000087', name: 'France', countryCode: 'FR' },
+  { id: '32000029', name: 'Belgique', countryCode: 'BE' },
+];
+
+export function buildDemoRanking(kind) {
+  const rand = seeded(kind === 'clans' ? 71 : 73);
+  const names = kind === 'clans'
+    ? ['Les Invaincus', 'Team Foudre', 'Dragons Noirs', 'Phoenix FR', 'La Horde', 'War Machine', 'Élite Paris', 'Les Loups', 'Titans du Sud', 'Clan des Rois', 'Nord Légende', 'Les Démos FR']
+    : NAMES.slice(0, 20);
+  return names.map((name, i) => {
+    const previousRank = Math.max(1, i + 1 + Math.round((rand() - 0.5) * 4));
+    const tag = `#2PP${TAG_CHARS[i % 14]}${TAG_CHARS[Math.floor(i / 14)]}`;
+    return kind === 'clans'
+      ? { rank: i + 1, previousRank, tag, name, level: 25 - (i % 6), memberCount: 50 - (i % 5), points: 62000 - i * 410, badgeUrl: null }
+      : { rank: i + 1, previousRank, tag: `#QQ${TAG_CHARS[Math.floor(i / 14)]}${TAG_CHARS[i % 14]}`, name, expLevel: 260 - i * 2, trophies: 6400 - i * 37, attackWins: 180 - i * 3, clanName: 'Les Démos FR', clanTag: '#2PP' };
+  });
 }

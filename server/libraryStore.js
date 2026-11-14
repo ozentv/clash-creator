@@ -1,32 +1,21 @@
 import fs from 'node:fs';
-import pg from 'pg';
+import { dbEnabled, once, pool } from './db.js';
+
+export { dbEnabled };
 
 // Bibliothèque : fiches des fichiers src/data (lecture seule) + fiches ajoutées depuis le site,
 // enregistrées dans PostgreSQL quand DATABASE_URL est défini.
 
 const MAX_ENTRIES = 500;
-const url = process.env.DATABASE_URL?.trim();
-export const dbEnabled = Boolean(url);
-const pool = dbEnabled ? new pg.Pool({ connectionString: url, max: 3, connectionTimeoutMillis: 8000 }) : null;
-pool?.on('error', (err) => console.error('Base de données :', err.message));
 
-let ready; // création de la table, une seule fois
-function init() {
-  ready ??= pool
-    .query(
-      `create table if not exists library_entries (
-         id text primary key,
-         kind text not null check (kind in ('composition', 'base')),
-         data jsonb not null,
-         created_at timestamptz not null default now()
-       )`,
-    )
-    .catch((err) => {
-      ready = undefined; // on réessaiera à la prochaine requête
-      throw err;
-    });
-  return ready;
-}
+const init = once(
+  `create table if not exists library_entries (
+     id text primary key,
+     kind text not null check (kind in ('composition', 'base')),
+     data jsonb not null,
+     created_at timestamptz not null default now()
+   )`,
+);
 
 function readFile(name) {
   try {
@@ -71,5 +60,3 @@ export async function removeEntry(id) {
   const result = await pool.query('delete from library_entries where id = $1', [id]);
   return result.rowCount > 0;
 }
-
-export const closeStore = () => pool?.end();

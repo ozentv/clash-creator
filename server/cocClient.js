@@ -85,6 +85,9 @@ export const fetchLeagueWar = (warTag, token) =>
   cocGet(`/clanwarleagues/wars/${tagPath(warTag)}`, token);
 export const fetchRaidSeasons = (tag, token) =>
   cocGet(`/clans/${tagPath(tag)}/capitalraidseasons?limit=1`, token);
+export const fetchLocations = (token) => cocGet('/locations?limit=400', token);
+export const fetchRanking = (location, kind, token) =>
+  cocGet(`/locations/${encodeURIComponent(location)}/rankings/${kind}?limit=100`, token);
 export const fetchPlayer = (tag, token) => cocGet(`/players/${tagPath(tag)}`, token);
 
 // Les fonctions to*Dto ne gardent que les champs utiles au front.
@@ -174,6 +177,9 @@ export function toWarDto(raw) {
     endTime: toIsoDate(raw.endTime),
     clan: side(raw.clan),
     opponent: side(raw.opponent ?? {}),
+    opponents: [...(raw.opponent?.members ?? [])]
+      .sort((a, b) => a.mapPosition - b.mapPosition)
+      .map((m) => ({ tag: m.tag, name: m.name, position: m.mapPosition, townHallLevel: m.townhallLevel ?? null })),
     members: [...raw.clan.members]
       .sort((a, b) => a.mapPosition - b.mapPosition)
       .map((m) => ({
@@ -282,6 +288,60 @@ export async function loadLeague(tag, token) {
     rounds,
     members: [...stats.values()].sort((a, b) => b.stars - a.stars || b.destruction - a.destruction),
   };
+}
+
+export function toLocationsDto(raw) {
+  return (raw.items ?? [])
+    .filter((l) => l.isCountry)
+    .map((l) => ({ id: String(l.id), name: l.name, countryCode: l.countryCode ?? null }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function toRankingDto(raw, kind) {
+  const items = raw.items ?? [];
+  return kind === 'clans'
+    ? items.map((c) => ({
+        rank: c.rank,
+        previousRank: c.previousRank ?? null,
+        tag: c.tag,
+        name: c.name,
+        level: c.clanLevel ?? null,
+        memberCount: c.members ?? null,
+        points: c.clanPoints ?? 0,
+        badgeUrl: c.badgeUrls?.small ?? null,
+      }))
+    : items.map((p) => ({
+        rank: p.rank,
+        previousRank: p.previousRank ?? null,
+        tag: p.tag,
+        name: p.name,
+        expLevel: p.expLevel ?? null,
+        trophies: p.trophies ?? 0,
+        attackWins: p.attackWins ?? 0,
+        clanName: p.clan?.name ?? null,
+        clanTag: p.clan?.tag ?? null,
+      }));
+}
+
+// Effectif détaillé : le niveau de chaque unité de chaque membre (une requête par membre,
+// par paquets de 8 ; le cache évite de recommencer à chaque visite).
+export async function loadRoster(memberTags, token) {
+  const roster = [];
+  for (let i = 0; i < memberTags.length; i += 8) {
+    const batch = await Promise.all(
+      memberTags.slice(i, i + 8).map((tag) => fetchPlayer(tag.replace('#', ''), token).catch(() => null)),
+    );
+    for (const raw of batch) if (raw) roster.push(toRosterEntry(raw));
+  }
+  return roster;
+}
+
+export function toRosterEntry(raw) {
+  const levels = {};
+  for (const unit of [...(raw.troops ?? []), ...(raw.spells ?? []), ...(raw.heroes ?? [])]) {
+    if (unit.village === 'home') levels[unit.name] = { level: unit.level, maxLevel: unit.maxLevel };
+  }
+  return { tag: raw.tag, name: raw.name, townHallLevel: raw.townHallLevel ?? null, levels };
 }
 
 export { toPlayerDto } from './playerDto.js';

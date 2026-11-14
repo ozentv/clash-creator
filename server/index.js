@@ -12,6 +12,11 @@ import {
   clanFetchedAt,
   playerFetchedAt,
   fetchWarLog,
+  fetchLocations,
+  fetchRanking,
+  loadRoster,
+  toLocationsDto,
+  toRankingDto,
   fetchRaidSeasons,
   loadLeague,
   searchClans,
@@ -31,9 +36,15 @@ import {
   buildDemoWarLog,
   buildDemoLeague,
   buildDemoRaids,
+  buildDemoHistory,
+  buildDemoPlayerHistory,
+  buildDemoRoster,
+  buildDemoRanking,
+  DEMO_LOCATIONS,
 } from './demoData.js';
 
 import { addEntry, dbEnabled, listLibrary, removeEntry } from './libraryStore.js';
+import { clanHistory, playerHistory, recordSnapshot, summarize, trackedClans } from './historyStore.js';
 import { cleanEntry, KINDS } from '../src/lib/libraryRules.js';
 
 const PORT = process.env.PORT ?? 3001;
@@ -187,10 +198,104 @@ app.get('/api/clans/search', async (req, res) => {
 
 app.get(
   '/api/clan/:tag',
-  withTag(async (tag) => ({
-    clan: DEMO ? buildDemoClan(tag) : toClanDto(await fetchClan(tag, TOKEN)),
-    fetchedAt: DEMO ? new Date().toISOString() : clanFetchedAt(tag),
-  })),
+  withTag(async (tag) => {
+    if (DEMO) return { clan: buildDemoClan(tag), fetchedAt: new Date().toISOString() };
+    const clan = toClanDto(await fetchClan(tag, TOKEN));
+    recordSnapshot(clan); // relevé du jour pour l'historique, sans attendre
+    return { clan, fetchedAt: clanFetchedAt(tag) };
+  }),
+);
+
+// ---------- Historique ----------
+
+const historyError = (err) => {
+  console.error('Historique :', err.message);
+  throw new CocApiError(503, "L'historique est momentanément indisponible.");
+};
+
+app.get(
+  '/api/clan/:tag/history',
+  withTag(async (tag) => {
+    if (DEMO) return { enabled: true, ...summarize(buildDemoHistory(tag)) };
+    if (!dbEnabled) return { enabled: false, days: [], movements: [] };
+    return { enabled: true, ...(await clanHistory(`#${tag}`).catch(historyError)) };
+  }),
+);
+
+app.get(
+  '/api/player/:tag/history',
+  withTag(async (tag) => {
+    if (DEMO) return { enabled: true, days: buildDemoPlayerHistory(tag) };
+    if (!dbEnabled) return { enabled: false, days: [] };
+    return { enabled: true, days: await playerHistory(`#${tag}`).catch(historyError) };
+  }),
+);
+
+// À appeler régulièrement par un service de surveillance (UptimeRobot, cron-job.org…) :
+// met à jour le relevé du jour de chaque clan suivi, même sans visiteur. Une fois par heure au plus.
+let lastCron = 0;
+app.get('/api/cron/snapshot', async (req, res) => {
+  if (DEMO || !dbEnabled) return res.json({ ok: true, updated: 0 });
+  if (Date.now() - lastCron < 60 * 60_000) return res.json({ ok: true, updated: 0, skipped: 'déjà fait dans l\'heure' });
+  lastCron = Date.now();
+  let updated = 0;
+  try {
+    for (const tag of await trackedClans()) {
+      const clan = await fetchClan(tag.replace('#', ''), TOKEN).then(toClanDto).catch(() => null);
+      if (!clan) continue;
+      await recordSnapshot(clan);
+      updated += 1;
+    }
+    res.json({ ok: true, updated });
+  } catch (err) {
+    console.error('Relevé planifié :', err.message);
+    res.status(503).json({ ok: false });
+  }
+});
+
+// ---------- Classements par pays ----------
+
+app.get('/api/rankings/locations', async (req, res) => {
+  try {
+    const locations = DEMO
+      ? DEMO_LOCATIONS
+      : [{ id: 'global', name: 'Monde', countryCode: null }, ...toLocationsDto(await fetchLocations(TOKEN))];
+    res.json({ locations });
+  } catch (err) {
+    res.status(err instanceof CocApiError ? err.status : 500).json({ error: err.message });
+  }
+});
+
+app.get('/api/rankings/:location/:kind', async (req, res) => {
+  const { location, kind } = req.params;
+  if (!/^(global|\d{6,10})$/.test(location) || !['clans', 'players'].includes(kind)) {
+    return res.status(400).json({ error: 'Classement inconnu.' });
+  }
+  try {
+    const ranking = DEMO ? buildDemoRanking(kind) : toRankingDto(await fetchRanking(location, kind, TOKEN), kind);
+    res.json({ demo: DEMO, ranking });
+  } catch (err) {
+    if (err instanceof CocApiError) return res.status(err.status).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
+  }
+});
+
+// ---------- Effectif détaillé (niveaux des unités de chaque membre) ----------
+
+const rosters = new Map(); // tag -> { at, roster }, gardé dix minutes
+app.get(
+  '/api/clan/:tag/roster',
+  withTag(async (tag) => {
+    if (DEMO) return { roster: buildDemoRoster() };
+    const cached = rosters.get(tag);
+    if (cached && Date.now() - cached.at < 10 * 60_000) return { roster: cached.roster };
+    const clan = await fetchClan(tag, TOKEN);
+    const roster = await loadRoster((clan.memberList ?? []).map((m) => m.tag), TOKEN);
+    if (rosters.size > 100) rosters.clear();
+    rosters.set(tag, { at: Date.now(), roster });
+    return { roster };
+  }),
 );
 
 app.get(

@@ -6,7 +6,6 @@ export function useClan() {
     status: 'idle',
     clan: null,
     demo: false,
-    ai: false,
     error: null,
   });
   const requestId = useRef(0);
@@ -15,11 +14,11 @@ export function useClan() {
     const id = ++requestId.current;
     setState((s) => ({ ...s, status: 'loading', error: null }));
     try {
-      const { clan, demo, ai } = await getClan(tag);
-      if (id === requestId.current) setState({ status: 'success', clan, demo, ai, error: null });
+      const { clan, demo } = await getClan(tag);
+      if (id === requestId.current) setState({ status: 'success', clan, demo, error: null });
     } catch (err) {
       if (id === requestId.current)
-        setState({ status: 'error', clan: null, demo: false, ai: false, error: err.message });
+        setState({ status: 'error', clan: null, demo: false, error: err.message });
     }
   }, []);
 

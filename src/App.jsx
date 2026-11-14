@@ -3,18 +3,17 @@ import ClanSearch from './components/ClanSearch.jsx';
 import ClanHeader from './components/ClanHeader.jsx';
 import StatCards from './components/StatCards.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
-import TikTokGenerator from './components/TikTokGenerator.jsx';
 import MemberList from './components/MemberList.jsx';
 
 export default function App() {
-  const { status, clan, demo, ai, error, load } = useClan();
+  const { status, clan, demo, error, load } = useClan();
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:py-12">
       <header className="text-center">
         <h1 className="title-clash text-4xl sm:text-6xl">Clash Creator AI</h1>
         <p className="mt-2 text-slate-300">
-          Les stats de ton clan, transformées en contenu TikTok prêt à poster.
+          Les stats et classements de ton clan, prêts à partager.
         </p>
       </header>
 
@@ -43,14 +42,7 @@ export default function App() {
           )}
           <ClanHeader clan={clan} />
           <StatCards members={clan.members} />
-          <div className="grid items-start gap-6 lg:grid-cols-5">
-            <div className="lg:col-span-3">
-              <Leaderboard clan={clan} />
-            </div>
-            <div className="lg:col-span-2">
-              <TikTokGenerator clan={clan} aiAvailable={ai} />
-            </div>
-          </div>
+          <Leaderboard clan={clan} />
           <MemberList members={clan.members} />
         </main>
       )}

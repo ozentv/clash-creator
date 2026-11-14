@@ -1,7 +1,7 @@
 # Clash Creator AI
 
-Analyse un clan Clash of Clans et transforme ses stats en contenu TikTok :
-classements trophées / dons, cartes de statistiques, texte TikTok généré et export PNG.
+Analyse un clan Clash of Clans : classements trophées / dons, cartes de statistiques,
+liste des membres et export PNG du classement.
 
 ## Démarrage
 
@@ -30,7 +30,7 @@ npm start              # sert l'API et le front compilé sur le port 3001
 ### Déploiement sur Render
 
 Le fichier `render.yaml` décrit le service. Sur https://dashboard.render.com :
-*New → Blueprint*, choisis ce dépôt, puis renseigne `COC_API_TOKEN` (et `ANTHROPIC_API_KEY` si voulu).
+*New → Blueprint*, choisis ce dépôt, puis renseigne `COC_API_TOKEN`.
 Render n'a pas d'adresse IP sortante unique (il fournit des plages, que le portail Clash of Clans
 refuse). Il faut donc passer par un proxy à IP fixe, par exemple celui de RoyaleAPI
 (https://docs.royaleapi.com/proxy.html) : autorise l'adresse IP du proxy dans la clé, puis définis
@@ -42,20 +42,10 @@ refuse). Il faut donc passer par un proxy à IP fixe, par exemple celui de Royal
 server/               Proxy Express : garde le token secret et contourne l'absence de CORS
   index.js            Routes HTTP (GET /api/clan/:tag)
   cocClient.js        Appel à l'API officielle + mapping des erreurs
-  tiktokAi.js         Génération IA du texte TikTok (facultative)
   demoData.js         Clan fictif du mode démo
 src/
   api/clashApi.js     Appels du front vers le proxy
   hooks/useClan.js    État de chargement du clan
-  lib/                Logique pure (tag, classements, stats, texte TikTok, export PNG)
-  components/         Composants React (recherche, en-tête, stats, classement, TikTok, membres)
+  lib/                Logique pure (tag, classements, stats, export PNG)
+  components/         Composants React (recherche, en-tête, stats, classement, membres)
 ```
-
-## Texte TikTok
-
-Par défaut, le texte est généré localement à partir de modèles alimentés par les stats du clan
-(`src/lib/tiktok.js`) : aucun service externe ni clé supplémentaire n'est nécessaire.
-
-Si `ANTHROPIC_API_KEY` est renseigné dans `.env`, un bouton « Générer avec l'IA » apparaît :
-le serveur (`server/tiktokAi.js`) envoie les stats du clan à Claude, qui rédige un texte original.
-Chaque génération est facturée sur le compte lié à la clé.

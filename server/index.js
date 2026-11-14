@@ -72,7 +72,7 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-app.get('/api/health', (req, res) => res.json({ ok: true, demo: DEMO }));
+
 
 // Valide le tag, exécute le handler et traduit les erreurs en réponses JSON.
 const withTag = (handler) => async (req, res) => {
@@ -96,6 +96,20 @@ const withTag = (handler) => async (req, res) => {
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD?.trim() ?? '';
 // L'ajout depuis le site demande une base de données et un mot de passe d'au moins 8 caractères.
 const EDITABLE = dbEnabled && ADMIN_PASSWORD.length >= 8;
+
+// Diagnostic sans donnée secrète : indique ce qui est configuré, jamais les valeurs.
+app.get('/api/health', (req, res) =>
+  res.json({
+    ok: true,
+    version: (process.env.RENDER_GIT_COMMIT ?? 'inconnue').slice(0, 7),
+    cleClashOfClans: DEMO ? 'absente (mode démo)' : 'présente',
+    bibliotheque: {
+      DATABASE_URL: dbEnabled ? 'présente' : 'absente',
+      ADMIN_PASSWORD: !ADMIN_PASSWORD ? 'absent' : ADMIN_PASSWORD.length < 8 ? 'trop court (8 caractères minimum)' : 'présent',
+      boutonGerer: EDITABLE ? 'activé' : 'désactivé',
+    },
+  }),
+);
 
 const digest = (value) => crypto.createHash('sha256').update(value).digest();
 const failures = new Map(); // tentatives de mot de passe ratées, par adresse IP

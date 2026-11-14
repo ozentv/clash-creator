@@ -4,21 +4,18 @@ export const RANKINGS = {
   trophies: {
     key: 'trophies',
     label: 'Trophées',
-    icon: '🏆',
     value: (m) => m.trophies,
     format: formatNumber,
   },
   donations: {
     key: 'donations',
     label: 'Dons',
-    icon: '🎁',
     value: (m) => m.donations,
     format: formatNumber,
   },
   balance: {
     key: 'balance',
     label: 'Bilan dons',
-    icon: '⚖️',
     hint: 'Dons donnés moins dons reçus',
     value: (m) => m.donations - m.donationsReceived,
     format: formatSigned,
@@ -26,14 +23,12 @@ export const RANKINGS = {
   expLevel: {
     key: 'expLevel',
     label: 'Niveau',
-    icon: '⭐',
     value: (m) => m.expLevel,
     format: formatNumber,
   },
   townHall: {
     key: 'townHall',
     label: 'Hôtel de ville',
-    icon: '🏰',
     value: (m) => m.townHallLevel ?? 0,
     format: (n) => `HDV ${n}`,
   },

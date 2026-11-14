@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Search } from 'lucide-react';
 import { normalizeTag } from '../lib/tag.js';
 
 export default function ClanSearch({ onSearch, loading }) {
@@ -13,28 +14,29 @@ export default function ClanSearch({ onSearch, loading }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="panel mx-auto w-full max-w-xl p-4">
-      <label htmlFor="clan-tag" className="mb-2 block font-display text-lg text-gold-300">
+    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-xl">
+      <label htmlFor="clan-tag" className="sr-only">
         Tag du clan
       </label>
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-ink-950/90 p-1.5 pl-4 backdrop-blur focus-within:border-accent-400/70">
+        <Search className="size-5 shrink-0 text-accent-400" aria-hidden="true" />
         <input
           id="clan-tag"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="#2PP0JCCL"
+          placeholder="Tag du clan, ex. #2PP0JCCL"
           autoComplete="off"
           spellCheck={false}
           aria-invalid={invalid}
           aria-describedby={invalid ? 'clan-tag-error' : undefined}
-          className="min-w-0 flex-1 rounded-xl border-2 border-night-700 bg-night-950 px-4 py-2.5 font-mono text-lg uppercase tracking-wider text-white placeholder:normal-case placeholder:text-slate-600 focus:border-gold-400 focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent py-2 text-base text-white uppercase placeholder:text-zinc-500 placeholder:normal-case focus:outline-none"
         />
-        <button type="submit" className="btn btn-green px-6 py-2.5 text-lg" disabled={loading}>
-          {loading ? 'Chargement…' : '⚔️ Analyser'}
+        <button type="submit" className="btn btn-primary shrink-0" disabled={loading}>
+          {loading ? 'Chargement…' : 'Analyser'}
         </button>
       </div>
       {invalid && (
-        <p id="clan-tag-error" className="mt-2 text-sm text-red-300">
+        <p id="clan-tag-error" className="mt-2 rounded-lg bg-ink-950/80 px-3 py-1.5 text-sm text-red-300">
           Tag invalide. Un tag ne contient que les caractères 0289PYLQGRJCUV (ex. #2PP0JCCL).
         </p>
       )}

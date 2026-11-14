@@ -1,3 +1,4 @@
+import { Clock, Star, Swords } from 'lucide-react';
 import { getWar } from '../api/clashApi.js';
 import { useAsync } from '../hooks/useAsync.js';
 import { formatDuration } from '../lib/format.js';
@@ -20,20 +21,33 @@ function timing(war) {
 }
 
 function Side({ side, align }) {
+  const right = align === 'right';
   return (
-    <div className={`min-w-0 flex-1 ${align === 'right' ? 'text-right' : ''}`}>
-      <p className="truncate font-semibold">{side.name}</p>
-      <p className="font-display text-3xl text-gold-300 tabular-nums">⭐ {side.stars}</p>
-      <p className="text-xs text-slate-400 tabular-nums">{side.destruction.toFixed(1)} % détruit</p>
+    <div className={`min-w-0 flex-1 ${right ? 'text-right' : ''}`}>
+      <p className="truncate text-sm font-medium text-zinc-300">{side.name}</p>
+      <p className={`flex items-center gap-2 text-4xl font-bold text-white tabular-nums ${right ? 'justify-end' : ''}`}>
+        <Star className="size-6 fill-accent-400 text-accent-400" aria-hidden="true" />
+        {side.stars}
+      </p>
+      <p className="text-xs text-zinc-500 tabular-nums">{side.destruction.toFixed(1)} % détruit</p>
     </div>
   );
 }
 
 function Attack({ attack }) {
   return (
-    <span className="rounded-md bg-night-950 px-2 py-0.5 text-xs whitespace-nowrap tabular-nums">
-      {'⭐'.repeat(attack.stars) || '0 ⭐'} {Math.round(attack.destruction)} %
-      {attack.defenderPosition && <span className="text-slate-500"> sur n°{attack.defenderPosition}</span>}
+    <span className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-0.5 text-xs whitespace-nowrap text-zinc-300 tabular-nums">
+      <span className="flex" aria-label={`${attack.stars} étoiles`}>
+        {[1, 2, 3].map((n) => (
+          <Star
+            key={n}
+            aria-hidden="true"
+            className={`size-3 ${n <= attack.stars ? 'fill-accent-400 text-accent-400' : 'text-zinc-700'}`}
+          />
+        ))}
+      </span>
+      {Math.round(attack.destruction)} %
+      {attack.defenderPosition && <span className="text-zinc-500">n°{attack.defenderPosition}</span>}
     </span>
   );
 }
@@ -41,7 +55,7 @@ function Attack({ attack }) {
 function WarContent({ war, onSelectPlayer }) {
   if (war.state === 'notInWar') {
     return (
-      <p className="text-slate-400">
+      <p className="p-4 text-sm text-zinc-400">
         Aucune guerre classique en cours. Les guerres de la Ligue de guerre de clans n'apparaissent
         pas ici.
       </p>
@@ -49,7 +63,7 @@ function WarContent({ war, onSelectPlayer }) {
   }
   if (war.state === 'private') {
     return (
-      <p className="text-slate-400">
+      <p className="p-4 text-sm text-zinc-400">
         Le journal de guerre de ce clan est privé. Le chef peut le rendre public dans les
         paramètres du clan.
       </p>
@@ -60,31 +74,40 @@ function WarContent({ war, onSelectPlayer }) {
   const pending = war.members
     .map((m) => ({ ...m, left: war.attacksPerMember - m.attacks.length }))
     .filter((m) => m.left > 0);
+  const when = timing(war);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="rounded-xl bg-night-950 p-4">
-        <p className="mb-2 text-center text-sm text-slate-300">
-          <span className="font-display text-gold-300">{STATE_LABELS[war.state] ?? war.state}</span>
-          {' · '}
-          {war.teamSize} contre {war.teamSize}
-          {timing(war) && ` · ${timing(war)}`}
+    <>
+      <div className="border-b border-white/10 p-4">
+        <p className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-zinc-400">
+          <span className="rounded-md bg-accent-400/10 px-2 py-0.5 font-semibold text-accent-400">
+            {STATE_LABELS[war.state] ?? war.state}
+          </span>
+          <span>
+            {war.teamSize} contre {war.teamSize}
+          </span>
+          {when && (
+            <span className="flex items-center gap-1">
+              <Clock className="size-3.5" aria-hidden="true" />
+              {when}
+            </span>
+          )}
         </p>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Side side={war.clan} />
-          <span className="font-display text-xl text-slate-500">VS</span>
+          <span className="text-xs font-semibold tracking-widest text-zinc-600">VS</span>
           <Side side={war.opponent} align="right" />
         </div>
       </div>
 
       {fighting && (
-        <div>
-          <h4 className="mb-2 font-display text-lg text-gold-300">
-            {war.state === 'inWar' ? 'Attaques restantes' : 'Attaques non utilisées'} (
-            {pending.reduce((n, m) => n + m.left, 0)})
+        <div className="border-b border-white/10 p-4">
+          <h4 className="mb-2 text-sm font-semibold text-white">
+            {war.state === 'inWar' ? 'Attaques restantes' : 'Attaques non utilisées'}
+            <span className="ml-2 text-zinc-500">{pending.reduce((n, m) => n + m.left, 0)}</span>
           </h4>
           {pending.length === 0 ? (
-            <p className="text-sm text-slate-400">Tout le monde a utilisé ses attaques. 👏</p>
+            <p className="text-sm text-zinc-400">Tout le monde a utilisé ses attaques.</p>
           ) : (
             <ul className="flex flex-wrap gap-2">
               {pending.map((m) => (
@@ -92,9 +115,9 @@ function WarContent({ war, onSelectPlayer }) {
                   <button
                     type="button"
                     onClick={() => onSelectPlayer(m.tag)}
-                    className="cursor-pointer rounded-full bg-red-500/15 px-3 py-1 text-sm text-red-200 ring-1 ring-red-500/40 hover:bg-red-500/25"
+                    className="cursor-pointer rounded-md border border-red-400/30 bg-red-400/10 px-2.5 py-1 text-sm text-red-200 hover:border-red-400/60"
                   >
-                    {m.name} <span className="font-display">×{m.left}</span>
+                    {m.name} <span className="font-semibold tabular-nums">×{m.left}</span>
                   </button>
                 </li>
               ))}
@@ -103,32 +126,32 @@ function WarContent({ war, onSelectPlayer }) {
         </div>
       )}
 
-      <ol className="flex flex-col gap-1.5">
+      <ol className="divide-y divide-white/5">
         {war.members.map((m) => (
-          <li key={m.tag} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-night-800 px-3 py-2">
-            <span className="w-6 shrink-0 text-center font-display text-slate-400">{m.position}</span>
+          <li key={m.tag} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+            <span className="w-6 shrink-0 text-sm text-zinc-500 tabular-nums">{m.position}</span>
             <span className="min-w-0 flex-1">
               <button
                 type="button"
                 onClick={() => onSelectPlayer(m.tag)}
-                className="block max-w-full cursor-pointer truncate font-semibold hover:text-gold-300 hover:underline"
+                className="player-link block max-w-full truncate"
               >
                 {m.name}
               </button>
-              {m.townHallLevel && <span className="text-xs text-slate-400">HDV {m.townHallLevel}</span>}
+              {m.townHallLevel && <span className="text-xs text-zinc-500">HDV {m.townHallLevel}</span>}
             </span>
             {fighting && (
-              <span className="flex flex-wrap justify-end gap-1.5">
+              <span className="flex w-full flex-wrap gap-1.5 pl-9 sm:w-auto sm:justify-end sm:pl-0">
                 {m.attacks.map((a, i) => (
                   <Attack key={i} attack={a} />
                 ))}
-                {m.attacks.length === 0 && <span className="text-xs text-slate-500">Pas encore attaqué</span>}
+                {m.attacks.length === 0 && <span className="text-xs text-zinc-600">Pas encore attaqué</span>}
               </span>
             )}
           </li>
         ))}
       </ol>
-    </div>
+    </>
   );
 }
 
@@ -136,12 +159,15 @@ export default function WarPanel({ clanTag, onSelectPlayer }) {
   const { status, data: war, error } = useAsync(getWar, clanTag);
 
   return (
-    <section className="panel p-4 sm:p-5">
-      <h3 className="title-clash mb-4 text-2xl">⚔️ Guerre de clan</h3>
-      {status === 'loading' && <p className="text-slate-400">Chargement de la guerre…</p>}
+    <section id="guerre" className="card overflow-hidden">
+      <h3 className="section-label border-b border-white/10 p-4">
+        <Swords className="size-4 text-accent-400" aria-hidden="true" />
+        Guerre de clan
+      </h3>
+      {status === 'loading' && <p className="p-4 text-sm text-zinc-400">Chargement de la guerre…</p>}
       {status === 'error' && (
-        <p role="alert" className="text-red-300">
-          ⚠️ {error}
+        <p role="alert" className="p-4 text-sm text-red-300">
+          {error}
         </p>
       )}
       {status === 'success' && <WarContent war={war} onSelectPlayer={onSelectPlayer} />}

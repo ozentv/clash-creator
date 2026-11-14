@@ -2,58 +2,52 @@
 
 @theme {
   --font-display: 'Lilita One', system-ui, sans-serif;
-  --color-night-950: #0b1220;
-  --color-night-900: #111b30;
-  --color-night-800: #1a2742;
-  --color-night-700: #26375c;
-  --color-gold-300: #ffe27a;
-  --color-gold-400: #ffc933;
-  --color-gold-500: #f5a70f;
-  --color-gold-700: #a65f00;
-  --color-elixir-500: #d946ef;
+  --color-ink-950: #08080d;
+  --color-ink-900: #101017;
+  --color-ink-800: #181821;
+  --color-ink-700: #262631;
+  --color-accent-400: #f5c531;
+  --color-accent-600: #c99a0a;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {
-  @apply min-h-screen bg-night-950 text-slate-100 antialiased;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgb(245 167 15 / 0.22), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgb(217 70 239 / 0.1), transparent);
-  background-attachment: fixed;
+  @apply min-h-screen bg-ink-950 text-zinc-100 antialiased;
+  background-image: radial-gradient(ellipse 45% 35% at 0% 0%, rgb(88 28 135 / 0.2), transparent);
+  background-repeat: no-repeat;
 }
 
 @layer components {
-  /* Titre « cartoon » : remplissage doré + contour sombre */
-  .title-clash {
-    @apply font-display text-gold-400;
-    text-shadow:
-      0 2px 0 #5a3200,
-      0 4px 0 rgb(0 0 0 / 0.35);
-    -webkit-text-stroke: 1px #5a3200;
-    paint-order: stroke fill;
+  .card {
+    @apply rounded-xl border border-white/10 bg-ink-900;
   }
 
-  .panel {
-    @apply rounded-2xl border-2 border-night-700 bg-night-900/90 shadow-xl shadow-black/40;
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.06),
-      0 12px 30px rgb(0 0 0 / 0.4);
+  .section-label {
+    @apply flex items-center gap-2 text-xs font-semibold tracking-[0.14em] text-zinc-400 uppercase;
   }
 
-  /* Boutons en relief façon jeu mobile */
   .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border-b-4 px-4 py-2 font-display text-base tracking-wide transition active:translate-y-0.5 active:border-b-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
   }
-  .btn-gold {
-    @apply border-gold-700 bg-gradient-to-b from-gold-300 to-gold-500 text-amber-950 hover:brightness-110;
+  .btn-primary {
+    @apply border-b-2 border-accent-600 bg-accent-400 text-black hover:brightness-110 active:translate-y-px active:border-b;
   }
-  .btn-green {
-    @apply border-green-800 bg-gradient-to-b from-lime-400 to-green-600 text-white hover:brightness-110;
-    text-shadow: 0 1px 0 rgb(0 0 0 / 0.4);
+  .btn-quiet {
+    @apply border border-white/10 bg-ink-800 text-zinc-300 hover:border-white/25 hover:text-white;
   }
-  .btn-ghost {
-    @apply border-night-950 bg-night-700 text-slate-200 hover:bg-night-800;
+  .btn-quiet[aria-pressed='true'] {
+    @apply border-accent-400/70 bg-accent-400/10 text-accent-400;
   }
-  .btn-ghost[aria-pressed='true'] {
-    @apply border-gold-700 bg-gradient-to-b from-gold-300 to-gold-500 text-amber-950;
+
+  .field {
+    @apply rounded-lg border border-white/10 bg-ink-950 text-zinc-100 placeholder:text-zinc-600 focus:border-accent-400/70 focus:outline-none;
+  }
+
+  .player-link {
+    @apply cursor-pointer text-left font-medium text-zinc-100 hover:text-accent-400;
   }
 }
